@@ -1,0 +1,114 @@
+@using Microsoft.AspNetCore.Identity
+@using OnlineAuction.Models
+@inject UserManager<ApplicationUser> UserManager
+@model OnlineAuction.ViewModels.AdminDashboardViewModel
+
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Admin Dashboard</h2>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Users</h5>
+                    <h2 class="card-text">@Model.TotalUsers</h2>
+                    <a asp-action="Users" class="btn btn-light">Manage Users</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Auctions</h5>
+                    <h2 class="card-text">@Model.TotalAuctions</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Categories</h5>
+                    <h2 class="card-text">@Model.TotalCategories</h2>
+                    <a asp-action="Categories" class="btn btn-light">Manage Categories</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Recent Reports</h5>
+                    <a asp-action="Reports" class="btn btn-primary btn-sm">View All Reports</a>
+                </div>
+                <div class="card-body">
+                    @if (Model.RecentReports.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Auction</th>
+                                        <th>Reporter</th>
+                                        <th>Reason</th>
+                                        <th>Reported At</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var report in Model.RecentReports)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <a asp-controller="Home" asp-action="AuctionDetails" asp-route-id="@report.AuctionId">
+                                                    @report.Auction?.Title
+                                                </a>
+                                            </td>
+                                            <td>@report.Reporter?.UserName</td>
+                                            <td>@report.Reason</td>
+                                            <td>@report.ReportedAt.ToString("MMM dd, yyyy HH:mm")</td>
+                                            <td>
+                                                <form asp-action="DeleteReport" method="post" class="d-inline">
+                                                    <input type="hidden" name="id" value="@report.Id" />
+                                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this report?')">
+                                                        Delete
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No recent reports.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Add any JavaScript for dynamic functionality here
+        document.addEventListener('DOMContentLoaded', function () {
+            // Prevent default form submission on reject button click
+            document.querySelectorAll('[data-bs-toggle="modal"][data-bs-target^="#rejectModal-"]').forEach(button => {
+                button.addEventListener('click', function (event) {
+                    event.preventDefault();
+                });
+            });
+        });
+
+        // Include validation scripts
+        @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    </script>
+} 

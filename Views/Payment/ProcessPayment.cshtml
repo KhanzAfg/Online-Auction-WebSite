@@ -1,0 +1,108 @@
+@using OnlineAuction.ViewModels
+@model ProcessPaymentViewModel
+
+@{
+    ViewData["Title"] = "Process Payment";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Process Payment</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Auction Details</h5>
+                            <p><strong>Title:</strong> @Model.AuctionTitle</p>
+                            <p><strong>Seller:</strong> @Model.SellerName</p>
+                            <p><strong>Amount:</strong> <span class="text-primary h5">$@Model.Amount.ToString("F2")</span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Payment Summary</h5>
+                            <p><strong>Item Price:</strong> $@Model.Amount.ToString("F2")</p>
+                            <p><strong>Shipping:</strong> $@Model.ShippingCost.ToString("F2")</p>
+                            <hr>
+                            <p><strong>Total:</strong> <span class="text-success h5">$@((Model.Amount + Model.ShippingCost).ToString("F2"))</span></p>
+                        </div>
+                    </div>
+
+                    <form asp-action="ProcessPayment" method="post">
+                        <input type="hidden" asp-for="AuctionId" />
+                        <input type="hidden" asp-for="AuctionTitle" />
+                        <input type="hidden" asp-for="SellerName" />
+                        <input type="hidden" asp-for="Amount" />
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Payment Method</h5>
+                                <div class="mb-3">
+                                    <label asp-for="PaymentMethod" class="form-label">Select Payment Method</label>
+                                    <select asp-for="PaymentMethod" class="form-select" asp-items="Html.GetEnumSelectList<PaymentMethod>()">
+                                        <option value="">Choose payment method...</option>
+                                    </select>
+                                    <span asp-validation-for="PaymentMethod" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h5>Shipping Information</h5>
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <label asp-for="ShippingAddress" class="form-label">Shipping Address</label>
+                                        <input asp-for="ShippingAddress" class="form-control" placeholder="Enter your shipping address" />
+                                        <span asp-validation-for="ShippingAddress" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label asp-for="City" class="form-label">City</label>
+                                        <input asp-for="City" class="form-control" placeholder="City" />
+                                        <span asp-validation-for="City" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label asp-for="State" class="form-label">State</label>
+                                        <input asp-for="State" class="form-control" placeholder="State" />
+                                        <span asp-validation-for="State" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label asp-for="PostalCode" class="form-label">Postal Code</label>
+                                        <input asp-for="PostalCode" class="form-control" placeholder="Postal Code" />
+                                        <span asp-validation-for="PostalCode" class="text-danger"></span>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="Country" class="form-label">Country</label>
+                                        <input asp-for="Country" class="form-control" placeholder="Country" />
+                                        <span asp-validation-for="Country" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label asp-for="ShippingCost" class="form-label">Shipping Cost</label>
+                                        <input asp-for="ShippingCost" class="form-control" type="number" step="0.01" min="0" />
+                                        <span asp-validation-for="ShippingCost" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a asp-action="Index" class="btn btn-secondary me-md-2">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-credit-card me-2"></i>Process Payment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+} 

@@ -1,0 +1,105 @@
+@using Microsoft.AspNetCore.Identity
+@model IEnumerable<OnlineAuction.Models.ApplicationUser>
+@inject UserManager<ApplicationUser> UserManager
+@inject RoleManager<IdentityRole> RoleManager
+
+@{
+    ViewData["Title"] = "Manage Users";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Manage Users</h2>
+        <a asp-action="Index" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Full Name</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Roles</th>
+                            <th>Member Since</th>
+                            <th>Rating</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model)
+                        {
+                            var roles = await UserManager.GetRolesAsync(user);
+                            <tr>
+                                <td>@user.FullName</td>
+                                <td>@user.UserName</td>
+                                <td>@user.Email</td>
+                                <td>
+                                    @foreach (var role in roles)
+                                    {
+                                        <span class="badge bg-info text-dark me-1">@role</span>
+                                    }
+                                </td>
+                                <td>@user.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        @for (int i = 0; i < 5; i++)
+                                        {
+                                            <i class="fas fa-star @(i < user.Rating ? "text-warning" : "text-muted")"></i>
+                                        }
+                                        <span class="ms-2">(@user.Rating.ToString("F1"))</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (user.IsBlocked)
+                                    {
+                                        <span class="badge bg-danger">Blocked</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                </td>
+                                <td>
+                                    <form asp-action="ToggleUserBlock" method="post" class="d-inline">
+                                        <input type="hidden" name="userId" value="@user.Id" />
+                                        <button type="submit" class="btn @(user.IsBlocked ? "btn-success" : "btn-danger") btn-sm">
+                                            @(user.IsBlocked ? "Unblock" : "Block")
+                                        </button>
+                                    </form>
+                                    <a asp-controller="Home" asp-action="SellerProfile" asp-route-id="@user.Id" class="btn btn-info btn-sm">View Profile</a>
+                                    <div class="dropdown d-inline ms-1">
+                                        <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" id="rolesDropdown-@user.Id" data-bs-toggle="dropdown" aria-expanded="false">
+                                            Edit Roles
+                                        </button>
+                                        <ul class="dropdown-menu p-2" aria-labelledby="rolesDropdown-@user.Id" style="min-width: 180px;">
+                                            <li>
+                                                <form asp-action="ToggleRole" method="post" class="d-flex align-items-center">
+                                                    <input type="hidden" name="userId" value="@user.Id" />
+                                                    <input type="hidden" name="role" value="Admin" />
+                                                    <input type="checkbox" name="isInRole" value="true" @(roles.Contains("Admin") ? "checked" : "") onchange="this.form.submit()" />
+                                                    <label class="ms-2 mb-0">Admin</label>
+                                                </form>
+                                            </li>
+                                            <li>
+                                                <form asp-action="ToggleRole" method="post" class="d-flex align-items-center">
+                                                    <input type="hidden" name="userId" value="@user.Id" />
+                                                    <input type="hidden" name="role" value="Moderator" />
+                                                    <input type="checkbox" name="isInRole" value="true" @(roles.Contains("Moderator") ? "checked" : "") onchange="this.form.submit()" />
+                                                    <label class="ms-2 mb-0">Moderator</label>
+                                                </form>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div> 

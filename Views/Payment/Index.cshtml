@@ -1,0 +1,99 @@
+@using System.Security.Claims
+@model IEnumerable<OnlineAuction.Models.Payment>
+
+@{
+    ViewData["Title"] = "Payment History";
+    var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Payment History</h2>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (Model.Any())
+    {
+        <div class="row">
+            @foreach (var payment in Model)
+            {
+                var isBuyer = payment.BuyerId == currentUserId;
+                var otherParty = isBuyer ? payment.Seller : payment.Buyer;
+                
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">@payment.Auction?.Title</h6>
+                                <span class="badge @(payment.Status switch {
+                                    PaymentStatus.Completed => "bg-success",
+                                    PaymentStatus.Processing => "bg-warning",
+                                    PaymentStatus.Failed => "bg-danger",
+                                    PaymentStatus.Refunded => "bg-info",
+                                    _ => "bg-secondary"
+                                })">
+                                    @payment.Status
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <strong class="text-primary">$@payment.Amount.ToString("F2")</strong>
+                                <small class="text-muted d-block">@payment.Method</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <small class="text-muted">
+                                    @(isBuyer ? "Paid to:" : "Received from:") @otherParty?.FullName
+                                </small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar"></i> @payment.CreatedAt.ToString("MMM dd, yyyy HH:mm")
+                                </small>
+                            </div>
+                            
+                            @if (!string.IsNullOrEmpty(payment.TransactionId))
+                            {
+                                <div class="mb-3">
+                                    <small class="text-muted">
+                                        <i class="fas fa-hashtag"></i> @payment.TransactionId
+                                    </small>
+                                </div>
+                            }
+                        </div>
+                        <div class="card-footer">
+                            <a asp-action="PaymentDetails" asp-route-id="@payment.Id" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye"></i> View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="fas fa-credit-card fa-4x text-muted mb-4"></i>
+            <h4 class="text-muted">No payment history</h4>
+            <p class="text-muted">You haven't made any payments yet.</p>
+        </div>
+    }
+</div> 

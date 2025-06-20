@@ -1,0 +1,872 @@
+@using System.IO
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - AuctionBay</title>
+    <link rel="icon" type="image/x-icon" href="~/images/favicon.ico">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --scroll-to-top-size: 40px;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1030;
+            height: 60px;
+            background-color: #fff !important;
+        }
+
+        body {
+            padding-top: 90px;
+            min-height: 100vh;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+        }
+
+        main {
+            position: relative;
+            z-index: 1;
+            min-height: calc(100vh - 200px);
+            padding-bottom: 2rem;
+            flex: 1;
+        }
+
+        .navbar-brand img.logo-dark {
+            display: block;
+            height: 40px;
+        }
+
+        .navbar-brand img.logo-light {
+            display: none;
+            height: 40px;
+        }
+
+        [data-bs-theme="dark"] .navbar-brand img.logo-dark {
+            display: none;
+        }
+
+        [data-bs-theme="dark"] .navbar-brand img.logo-light {
+            display: block;
+        }
+
+        .navbar .navbar-brand {
+            border: none;
+            background: none;
+            width: auto;
+            height: auto;
+        }
+
+        /* Fix for categories dropdown menu */
+        .navbar .dropdown-menu {
+            z-index: 2000 !important;
+            position: absolute !important;
+            width: 220px;
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        /* Prevent parent containers from cutting off dropdown */
+        .navbar, .navbar .container, .navbar .navbar-collapse {
+            overflow: visible !important;
+        }
+
+        .scroll-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: var(--scroll-to-top-size);
+            height: var(--scroll-to-top-size);
+            background-color: var(--bs-primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+            z-index: 1000;
+        }
+
+        .scroll-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .scroll-to-top:hover {
+            background-color: var(--bs-primary-dark);
+            color: white;
+        }
+
+        /* Dark mode styles */
+        [data-bs-theme="dark"] {
+            --bs-body-bg: #212529;
+            --bs-body-color: #f8f9fa;
+            --bs-border-color: #495057;
+        }
+
+        [data-bs-theme="dark"] body {
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+        }
+
+        [data-bs-theme="dark"] .navbar {
+            background-color: #2c3034 !important;
+            border-color: var(--bs-border-color);
+        }
+
+        [data-bs-theme="dark"] .navbar-brand,
+        [data-bs-theme="dark"] .nav-link {
+            color: #f8f9fa !important;
+        }
+
+        [data-bs-theme="dark"] .dropdown-menu {
+            background-color: #2c3034;
+            border-color: var(--bs-border-color);
+        }
+
+        [data-bs-theme="dark"] .dropdown-item {
+            color: #f8f9fa;
+        }
+
+        [data-bs-theme="dark"] .dropdown-item:hover {
+            background-color: #495057;
+            color: #f8f9fa;
+        }
+
+        [data-bs-theme="dark"] .card {
+            background-color: #2c3034;
+            border-color: var(--bs-border-color);
+        }
+
+        [data-bs-theme="dark"] .card-header {
+            background-color: #343a40;
+            border-color: var(--bs-border-color);
+        }
+
+        [data-bs-theme="dark"] .list-group-item {
+            background-color: #2c3034;
+            border-color: var(--bs-border-color);
+            color: #f8f9fa;
+        }
+
+        [data-bs-theme="dark"] .table {
+            color: #f8f9fa;
+        }
+
+        [data-bs-theme="dark"] .table td,
+        [data-bs-theme="dark"] .table th {
+            border-color: var(--bs-border-color);
+        }
+
+        [data-bs-theme="dark"] .modal-content {
+            background-color: #2c3034;
+            border-color: var(--bs-border-color);
+        }
+
+        [data-bs-theme="dark"] .modal-header,
+        [data-bs-theme="dark"] .modal-footer {
+            border-color: var(--bs-border-color);
+        }
+
+        [data-bs-theme="dark"] .form-control,
+        [data-bs-theme="dark"] .form-select {
+            background-color: #343a40;
+            border-color: var(--bs-border-color);
+            color: #f8f9fa;
+        }
+
+        [data-bs-theme="dark"] .form-control:focus,
+        [data-bs-theme="dark"] .form-select:focus {
+            background-color: #343a40;
+            color: #f8f9fa;
+        }
+
+        [data-bs-theme="dark"] .btn-close {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+
+        [data-bs-theme="dark"] .footer {
+            background-color: #2c3034;
+            border-color: var(--bs-border-color);
+            color: #f8f9fa;
+        }
+
+        [data-bs-theme="dark"] .footer a {
+            color: #6c757d;
+        }
+
+        [data-bs-theme="dark"] .footer a:hover {
+            color: #adb5bd;
+        }
+
+        .theme-toggle {
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s;
+            height: 100%;
+            min-height: 38px;
+            width: 38px;
+        }
+
+        .theme-toggle:hover {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-bs-theme="dark"] .theme-toggle:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .theme-toggle i {
+            font-size: 1.1rem;
+            line-height: 1;
+        }
+
+        /* Ensure proper contrast for text in dark mode */
+        [data-bs-theme="dark"] .text-muted {
+            color: #adb5bd !important;
+        }
+
+        [data-bs-theme="dark"] .text-dark {
+            color: #f8f9fa !important;
+        }
+
+        /* Ensure proper contrast for badges in dark mode */
+        [data-bs-theme="dark"] .badge.bg-light {
+            background-color: #495057 !important;
+            color: #f8f9fa !important;
+        }
+
+        /* Footer Styling */
+        .footer {
+            background-color: #f8f9fa;
+            padding: 2rem 0 1rem 0;
+            margin-top: auto;
+            position: relative;
+            bottom: auto;
+            width: 100%;
+        }
+
+        [data-bs-theme="dark"] .footer {
+            background-color: #2c3034;
+            border-color: var(--bs-border-color);
+            color: #f8f9fa;
+        }
+
+        .footer h5, .footer h6 {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        [data-bs-theme="dark"] .footer h5, 
+        [data-bs-theme="dark"] .footer h6 {
+            color: #f8f9fa;
+        }
+
+        .footer .social-links a {
+            display: inline-block;
+            width: 35px;
+            height: 35px;
+            line-height: 35px;
+            text-align: center;
+            border-radius: 50%;
+            background-color: #e9ecef;
+            color: #6c757d;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .footer .social-links a:hover {
+            background-color: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        [data-bs-theme="dark"] .footer .social-links a {
+            background-color: #495057;
+            color: #adb5bd;
+        }
+
+        [data-bs-theme="dark"] .footer .social-links a:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .footer ul li a {
+            transition: color 0.3s ease;
+        }
+
+        .footer ul li a:hover {
+            color: var(--primary-color) !important;
+        }
+
+        [data-bs-theme="dark"] .footer ul li a:hover {
+            color: #adb5bd !important;
+        }
+
+        [data-bs-theme="dark"] .navbar, [data-bs-theme="dark"] .navbar .nav-link, [data-bs-theme="dark"] .navbar .dropdown-item, [data-bs-theme="dark"] .navbar .navbar-brand, [data-bs-theme="dark"] .navbar .dropdown-menu {
+            color: #f8f9fa !important;
+            background-color: #2c3034 !important;
+        }
+        [data-bs-theme="dark"] .navbar .dropdown-menu {
+            background-color: #23272b !important;
+        }
+        @@media (min-width: 992px) {
+            [data-bs-theme="dark"] .navbar .nav-link:hover, [data-bs-theme="dark"] .navbar .dropdown-item:hover {
+                color: #2196f3 !important;
+            }
+            .navbar .nav-link:hover, .navbar .dropdown-item:hover {
+                color: #2196f3 !important;
+            }
+        }
+
+        /* Mobile navbar fixes */
+        @@media (max-width: 991.98px) {
+            .navbar .container {
+                position: relative;
+            }
+
+            .navbar-collapse {
+                background-color: #fff;
+                padding: 1rem;
+                border-radius: 0.5rem;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                margin-top: 0.5rem;
+                position: absolute;
+                top: calc(100% + 5px); /* Position below navbar with a small gap */
+                left: 5%;
+                right: 5%;
+                width: 90%;
+                z-index: 1021; /* Higher than navbar but allows content to be under */
+                max-height: calc(100vh - 80px); /* Prevent full screen height */
+                overflow-y: auto;
+            }
+
+            [data-bs-theme="dark"] .navbar-collapse {
+                background-color: #2c3034 !important;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            }
+
+            /* Target all direct children of navbar-collapse for consistent layout */
+            .navbar-collapse > * {
+                margin-bottom: 1rem;
+            }
+            .navbar-collapse > *:last-child {
+                margin-bottom: 0;
+            }
+
+            /* Reset desktop-specific styles */
+            .navbar-collapse,
+            .navbar-collapse .navbar-nav,
+            .navbar-collapse .navbar-nav.ms-2 {
+                flex-direction: column;
+                align-items: stretch !important;
+                height: auto !important;
+                padding: 0;
+            }
+
+            /* Style all nav items and links consistently */
+            .navbar-collapse .nav-item {
+                margin-bottom: 0.5rem;
+            }
+            
+            .navbar-collapse .nav-link {
+                padding: 0.75rem 1rem;
+                border-radius: 0.375rem;
+                background-color: transparent !important;
+                color: #212529 !important;
+                border: none !important;
+                transition: color 0.2s ease-in-out;
+                display: block;
+                text-align: center;
+                font-size: 1rem;
+            }
+
+            [data-bs-theme="dark"] .navbar-collapse .nav-link {
+                color: #f8f9fa !important;
+            }
+
+            .navbar-collapse .nav-link:hover {
+                transform: none;
+                color: #2196f3 !important;
+            }
+
+            [data-bs-theme="dark"] .navbar-collapse .nav-link:hover {
+                color: #2196f3 !important;
+            }
+
+            /* Mobile dropdown styling */
+            .navbar-collapse .dropdown-menu {
+                position: static !important;
+                float: none;
+                width: 100%;
+                background-color: transparent;
+                border: none;
+                box-shadow: none;
+                margin-top: 0.5rem;
+                padding: 0;
+            }
+
+            .navbar-collapse .dropdown-item {
+                padding: 0.75rem 1rem;
+                border-radius: 0.375rem;
+                margin-bottom: 0.25rem;
+                background-color: transparent !important;
+                border: none !important;
+                color: #212529 !important;
+                text-align: center;
+                font-size: 1rem;
+                transition: color 0.2s ease-in-out;
+            }
+
+            .navbar-collapse .dropdown-item:hover {
+                color: #2196f3 !important;
+            }
+
+            [data-bs-theme="dark"] .navbar-collapse .dropdown-item {
+                color: #f8f9fa !important;
+            }
+
+            [data-bs-theme="dark"] .navbar-collapse .dropdown-item:hover {
+                color: #2196f3 !important;
+            }
+            
+            /* Center the theme toggle and notification icons */
+            .navbar-collapse .theme-toggle,
+            .navbar-collapse .nav-link[asp-controller="Notifications"] {
+                margin: 0 auto;
+                width: fit-content;
+            }
+        }
+
+        /* Global fix to remove hover/focus boxes from nav links */
+        .navbar .nav-link:focus, .navbar .nav-link:active, .navbar .nav-link:hover,
+        .navbar .dropdown-item:focus, .navbar .dropdown-item:active, .navbar .dropdown-item:hover {
+            box-shadow: none !important;
+            outline: none !important;
+            background-color: transparent !important;
+        }
+
+        /* Dark mode override to ensure no hover box */
+        [data-bs-theme="dark"] .navbar .nav-link:focus,
+        [data-bs-theme="dark"] .navbar .nav-link:active,
+        [data-bs-theme="dark"] .navbar .nav-link:hover,
+        [data-bs-theme="dark"] .navbar .dropdown-item:focus,
+        [data-bs-theme="dark"] .navbar .dropdown-item:active,
+        [data-bs-theme="dark"] .navbar .dropdown-item:hover {
+            background-color: transparent !important;
+        }
+
+        @@media (min-width: 992px) {
+            [data-bs-theme="dark"] .navbar .nav-link:hover, [data-bs-theme="dark"] .navbar .dropdown-item:hover {
+                color: #2196f3 !important;
+            }
+            .navbar .nav-link:hover, .navbar .dropdown-item:hover {
+                color: #2196f3 !important;
+            }
+        }
+
+        /* Improved Search UI */
+        .search-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: var(--bs-body-bg);
+            z-index: 1025; /* Sits just above the navbar content */
+            transform: translateY(-150%);
+            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 1rem;
+            padding-top: calc(60px + 1rem); /* Space for navbar */
+        }
+
+        .search-modal.visible {
+            transform: translateY(0);
+        }
+
+        [data-bs-theme="dark"] .search-modal {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        .search-modal .btn-close-search {
+            position: absolute;
+            top: calc(60px / 2);
+            right: 1.25rem;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            font-size: 1.75rem;
+            opacity: 0.8;
+            color: var(--bs-body-color);
+            padding: 0.5rem;
+            line-height: 1;
+        }
+
+        .search-modal-form {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .search-modal .form-control {
+            height: 48px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            padding-left: 1.25rem;
+            border-color: var(--bs-border-color);
+        }
+        
+        .search-modal .form-control:focus {
+            border-color: var(--bs-primary);
+            box-shadow: 0 0 0 3px rgba(var(--bs-primary-rgb), 0.2);
+        }
+
+        .search-modal .btn {
+            height: 48px;
+            border-radius: 50px;
+            min-width: 48px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @@media (min-width: 992px) {
+            [data-bs-theme="dark"] .navbar .nav-link:hover, [data-bs-theme="dark"] .navbar .dropdown-item:hover {
+                color: #2196f3 !important;
+            }
+            .navbar .nav-link:hover, .navbar .dropdown-item:hover {
+                color: #2196f3 !important;
+            }
+        }
+
+        /* Mobile-First Persistent Search Bar */
+        .mobile-search-bar {
+            display: none; /* Hidden on desktop */
+        }
+
+        @@media (max-width: 991.98px) {
+            body {
+                /* Navbar (60px) + Search Bar (approx 75px) */
+                padding-top: 135px;
+            }
+
+            .mobile-search-bar {
+                display: block;
+                position: fixed;
+                top: 60px; /* Place below the navbar */
+                left: 0;
+                right: 0;
+                z-index: 1020;
+                background: var(--bs-body-bg);
+                padding: 0.75rem 1rem;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.07);
+            }
+
+            [data-bs-theme="dark"] .mobile-search-bar {
+                box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            }
+
+            .mobile-search-bar .form-control {
+                height: 44px;
+                border-radius: 50px;
+            }
+
+            .mobile-search-bar .btn {
+                height: 44px;
+                border-radius: 50px;
+                flex-shrink: 0;
+            }
+        }
+
+        @@media (min-width: 992px) {
+            [data-bs-theme="dark"] .navbar .nav-link:hover, [data-bs-theme="dark"] .navbar .dropdown-item:hover {
+                color: #2196f3 !important;
+            }
+            .navbar .nav-link:hover, .navbar .dropdown-item:hover {
+                color: #2196f3 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm py-2 align-items-center" style="font-family: 'Poppins', Arial, sans-serif;">
+            <div class="container align-items-center">
+                <a class="navbar-brand d-flex align-items-center" asp-area="" asp-controller="Home" asp-action="Index" style="padding: 0; font-family: 'Poppins', Arial, sans-serif; font-weight: 700; font-size: 2rem; letter-spacing: 1px;">
+                    <span style="color: #2196f3;">Auction</span><span style="color: #198754;">Bay</span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse align-items-center" id="mainNavbar">
+                    <ul class="navbar-nav me-auto align-items-center" style="font-weight: 500;">
+                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">Home</a></li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="categoryDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Categories</a>
+                            <ul class="dropdown-menu" aria-labelledby="categoryDropdown" id="categoryList">
+                                <li><a class="dropdown-item" asp-controller="Home" asp-action="Categories">All Categories</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="SellAuction">Sell an Item</a></li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="accountDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">My Account</a>
+                            <ul class="dropdown-menu" aria-labelledby="accountDropdown">
+                                <li><a class="dropdown-item" asp-controller="Home" asp-action="MyAuctions">My Auctions</a></li>
+                                <li><a class="dropdown-item" asp-controller="Home" asp-action="MyBids">My Bids</a></li>
+                                <li><a class="dropdown-item" asp-controller="Home" asp-action="MyWatchlist">My Watchlist</a></li>
+                                <li><a class="dropdown-item" asp-controller="Payment" asp-action="Index">Payment History</a></li>
+                                <li><a class="dropdown-item" asp-controller="Home" asp-action="AdvancedSearch"><i class="fas fa-search"></i> Advanced Search</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <form asp-action="Search" method="get" class="d-none d-lg-flex align-items-center ms-lg-3" style="max-width: 350px; width: 100%;">
+                        <input type="text" name="searchTerm" class="form-control me-2" placeholder="Search..." style="border-radius: 20px; border: 1px solid #e0e0e0; height: 38px; font-size: 0.9rem;" />
+                        <button type="submit" class="btn btn-success d-flex align-items-center justify-content-center" style="border-radius: 50%; width: 38px; height: 38px; flex-shrink: 0;">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </form>
+                    <ul class="navbar-nav ms-2 align-items-center" style="height: 40px;">
+                        <li class="nav-item">
+                            <a class="nav-link theme-toggle" id="themeToggle" title="Toggle theme">
+                                <i class="fas fa-moon"></i>
+                            </a>
+                        </li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Notifications" asp-action="Index"><i class="fas fa-bell"></i> <span id="notificationCount" class="badge bg-danger ms-1 d-none"></span></a></li>
+                        <partial name="_LoginPartial" />
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="mobile-search-bar">
+        <form asp-action="Search" method="get" class="d-flex align-items-center w-100" style="gap: 0.75rem;">
+            <input type="text" name="searchTerm" class="form-control" placeholder="Search Auctions and Items...">
+            <button type="submit" class="btn btn-success"><i class="fas fa-search"></i></button>
+        </form>
+    </div>
+
+    @{
+        var isHomePage = Context.Request.Path.Equals("/") || Context.Request.Path.Equals("/Home") || Context.Request.Path.Equals("/Home/Index");
+    }
+    @if (isHomePage)
+    {
+        <div class="container px-0">
+            <section class="hero-section" style="position: relative; width: 100%; min-height: 480px; background: url('/images/unsplash.jpg') center center; background-size: cover; background-repeat: no-repeat; border-radius: 1rem; overflow: hidden; display: flex; align-items: center;">
+                <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.45);"></div>
+                <div class="h-100 d-flex flex-column justify-content-center align-items-start ps-5" style="position: relative; z-index: 2; min-height: 480px;">
+                    <h1 class="display-4 fw-bold text-white mb-3" style="text-shadow: 0 2px 8px rgba(0,0,0,0.4);">Discover Unique Auctions</h1>
+                    <p class="lead text-white mb-4" style="text-shadow: 0 1px 4px rgba(0,0,0,0.3); max-width: 600px;">Bid, win, and sell extraordinary items from trusted sellers worldwide.</p>
+                    <a href="@Url.Action("Categories", "Home")" class="btn btn-success btn-lg px-4 mt-2">Browse Auctions</a>
+                </div>
+            </section>
+        </div>
+    }
+
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <button class="scroll-to-top" id="scrollToTop" title="Scroll to top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <footer class="footer border-top mt-5 pt-5 pb-3" style="font-family: 'Poppins', Arial, sans-serif;">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h5 class="text-primary mb-3">AuctionBay</h5>
+                    <p class="small">Your trusted online auction platform for buying and selling unique items. Join thousands of users in the exciting world of online auctions.</p>
+                    <div class="social-links">
+                        <a href="#" class="text-muted me-3" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-muted me-3" title="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-muted me-3" title="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-muted" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h6 class="text-dark mb-3">Quick Links</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a asp-controller="Home" asp-action="Index" class="text-muted text-decoration-none">Home</a></li>
+                        <li class="mb-2"><a asp-controller="Home" asp-action="Categories" class="text-muted text-decoration-none">Categories</a></li>
+                        <li class="mb-2"><a asp-controller="Home" asp-action="AdvancedSearch" class="text-muted text-decoration-none">Advanced Search</a></li>
+                        <li class="mb-2"><a asp-controller="Home" asp-action="SellAuction" class="text-muted text-decoration-none">Sell an Item</a></li>
+                        <li class="mb-2"><a asp-controller="Home" asp-action="MyWatchlist" class="text-muted text-decoration-none">My Watchlist</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h6 class="text-dark mb-3">Account & Support</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a asp-controller="Home" asp-action="MyAuctions" class="text-muted text-decoration-none">My Auctions</a></li>
+                        <li class="mb-2"><a asp-controller="Home" asp-action="MyBids" class="text-muted text-decoration-none">My Bids</a></li>
+                        <li class="mb-2"><a asp-controller="Payment" asp-action="Index" class="text-muted text-decoration-none">Payment History</a></li>
+                        <li class="mb-2"><a asp-controller="Notifications" asp-action="Index" class="text-muted text-decoration-none">Notifications</a></li>
+                        <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Help Center</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h6 class="text-dark mb-3">Contact & Legal</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="mailto:support@auctionbay.com" class="text-muted text-decoration-none"><i class="fas fa-envelope me-2"></i>support@auctionbay.com</a></li>
+                        <li class="mb-2"><a href="tel:+1-800-AUCTION" class="text-muted text-decoration-none"><i class="fas fa-phone me-2"></i>1-800-AUCTION</a></li>
+                        <li class="mb-2"><a asp-controller="Home" asp-action="Privacy" class="text-muted text-decoration-none">Privacy Policy</a></li>
+                        <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Terms of Service</a></li>
+                        <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Cookie Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-top pt-3">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <p class="mb-0 small">&copy; @DateTime.Now.Year - AuctionBay. All rights reserved.</p>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <p class="mb-0 small">
+                            <span class="me-3">Secure Payment</span>
+                            <span class="me-3">24/7 Support</span>
+                            <span>Trusted Platform</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        const themeIcon = themeToggle.querySelector('i');
+
+        // Check for saved theme preference
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            html.setAttribute('data-bs-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        }
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+
+        function updateThemeIcon(theme) {
+            themeIcon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        // Scroll to top functionality
+        const scrollToTop = document.getElementById('scrollToTop');
+
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                scrollToTop.classList.add('visible');
+            } else {
+                scrollToTop.classList.remove('visible');
+            }
+        });
+
+        scrollToTop.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // Load categories for dropdown
+        function loadCategories() {
+            fetch('/Home/GetCategories')
+                .then(response => response.json())
+                .then(categories => {
+                    const categoryList = document.getElementById('categoryList');
+                    categories.forEach(category => {
+                        const li = document.createElement('li');
+                        const a = document.createElement('a');
+                        a.className = 'dropdown-item';
+                        a.href = `/Home/Category/${category.id}`;
+                        a.textContent = category.name;
+                        li.appendChild(a);
+                        categoryList.appendChild(li);
+                    });
+                })
+                .catch(error => console.error('Error loading categories:', error));
+        }
+
+        // Load categories when page loads
+        document.addEventListener('DOMContentLoaded', loadCategories);
+
+        function updateNotificationCount() {
+            fetch('/Notifications/GetUnreadCount')
+                .then(response => response.json())
+                .then(count => {
+                    const notificationCountElement = document.getElementById('notificationCount');
+                    if (count > 0) {
+                        notificationCountElement.textContent = count;
+                        notificationCountElement.classList.remove('d-none');
+                    } else {
+                        notificationCountElement.classList.add('d-none');
+                    }
+                })
+                .catch(error => console.error('Error fetching notification count:', error));
+        }
+
+        // Update count on page load
+        updateNotificationCount();
+
+        // Update count every 60 seconds
+        setInterval(updateNotificationCount, 60000);
+
+        // Search Modal functionality
+        const searchModal = document.getElementById('searchModal');
+        const mobileSearchToggle = document.getElementById('mobileSearchToggle');
+        const closeSearchModal = document.getElementById('closeSearchModal');
+        
+        if (searchModal && mobileSearchToggle && closeSearchModal) {
+            const searchInput = searchModal.querySelector('input[name="searchTerm"]');
+
+            mobileSearchToggle.addEventListener('click', (e) => {
+                e.preventDefault();
+                searchModal.classList.add('visible');
+                setTimeout(() => searchInput.focus(), 100); 
+            });
+
+            closeSearchModal.addEventListener('click', () => {
+                searchModal.classList.remove('visible');
+            });
+        }
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html> 

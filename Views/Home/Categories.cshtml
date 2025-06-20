@@ -1,0 +1,59 @@
+@model IEnumerable<OnlineAuction.Models.Category>
+
+@{
+    ViewData["Title"] = "Categories";
+}
+
+<div class="container mt-4">
+    <h1 class="mb-4">Categories</h1>
+
+    <div class="row">
+        @foreach (var category in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-img-top" style="height: 200px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center;">
+                        @if (!string.IsNullOrEmpty(category.ImagePath))
+                        {
+                            <img src="@category.ImagePath" 
+                                 alt="@category.Name"
+                                 style="max-height: 100%; max-width: 100%; object-fit: cover;"
+                                 onerror="this.onerror=null; this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-image fa-3x text-muted\'></i>';">
+                        }
+                        else
+                        {
+                            <i class="fas fa-image fa-3x text-muted"></i>
+                        }
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">@category.Name</h5>
+                        <p class="card-text">@category.Description</p>
+                        <p class="card-text">
+                            <small class="text-muted">
+                                @category.Auctions.Count active auctions
+                            </small>
+                        </p>
+                        <a href="@Url.Action("Category", "Home", new { id = category.Id })" 
+                           class="btn btn-primary">
+                            View Auctions
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const images = document.querySelectorAll('.card-img-top img');
+            images.forEach(img => {
+                img.onerror = function() {
+                    this.style.display = 'none';
+                    this.parentElement.innerHTML = '<i class="fas fa-image fa-3x text-muted"></i>';
+                };
+            });
+        });
+    </script>
+} 

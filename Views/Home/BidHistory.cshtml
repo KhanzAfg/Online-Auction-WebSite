@@ -1,0 +1,220 @@
+@model OnlineAuction.ViewModels.BidHistoryViewModel
+
+@{
+    ViewData["Title"] = $"Bid History - {Model.AuctionTitle}";
+}
+
+<div class="container mt-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="Index">Home</a></li>
+            <li class="breadcrumb-item"><a asp-action="AuctionDetails" asp-route-id="@Model.AuctionId">@Model.AuctionTitle</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Bid History</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Auction Summary -->
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Auction Summary</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <h6 class="text-muted">Current Bid</h6>
+                            <h3 class="text-success">$@Model.CurrentBid.ToString("F2")</h3>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-muted">Total Bids</h6>
+                            <h3 class="text-primary">@Model.TotalBids</h3>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-muted">Unique Bidders</h6>
+                            <h3 class="text-info">@Model.UniqueBidders</h3>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-muted">Status</h6>
+                            @if (Model.IsActive)
+                            {
+                                <span class="badge bg-success fs-6">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning fs-6">Ended</span>
+                            }
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <small class="text-muted">
+                                <i class="fas fa-clock"></i> Ends: @Model.AuctionEndDate.ToString("MMM dd, yyyy HH:mm")
+                            </small>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted">
+                                <i class="fas fa-dollar-sign"></i> Starting Price: $@Model.StartingPrice.ToString("F2")
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bidder Statistics -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Bidder Statistics</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.BidderStats.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var bidder in Model.BidderStats)
+                            {
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        @if (!string.IsNullOrEmpty(bidder.ProfileImagePath))
+                                        {
+                                            <img src="@bidder.ProfileImagePath" alt="@bidder.BidderName" 
+                                                 class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-user-circle me-2 text-muted" style="font-size: 40px;"></i>
+                                        }
+                                        <div>
+                                            <h6 class="mb-1 @(bidder.IsCurrentWinner ? "text-success" : "")">
+                                                @bidder.BidderName
+                                                @if (bidder.IsCurrentWinner)
+                                                {
+                                                    <i class="fas fa-crown text-warning"></i>
+                                                }
+                                            </h6>
+                                            <small class="text-muted">
+                                                @bidder.TotalBids bids • Highest: $@bidder.HighestBid.ToString("F2")
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <small class="text-muted">
+                                            Last: @bidder.LastBid.ToString("MMM dd, HH:mm")
+                                        </small>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center">No bids yet.</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Bid History -->
+        <div class="col-md-8 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Detailed Bid History</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.Bids.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Bidder</th>
+                                        <th>Amount</th>
+                                        <th>Time</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var bid in Model.Bids)
+                                    {
+                                        <tr class="@(bid.IsWinning ? "table-success" : bid.IsOutbid ? "table-light" : "")">
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    @if (!string.IsNullOrEmpty(bid.ProfileImagePath))
+                                                    {
+                                                        <img src="@bid.ProfileImagePath" alt="@bid.BidderName" 
+                                                             class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover;">
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="fas fa-user-circle me-2 text-muted" style="font-size: 30px;"></i>
+                                                    }
+                                                    <div>
+                                                        <strong>@bid.BidderName</strong>
+                                                        @if (bid.IsWinning)
+                                                        {
+                                                            <i class="fas fa-crown text-warning ms-1"></i>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <strong class="@(bid.IsWinning ? "text-success" : "")">
+                                                    $@bid.Amount.ToString("F2")
+                                                </strong>
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">
+                                                    @bid.BidTime.ToString("MMM dd, yyyy HH:mm:ss")
+                                                </small>
+                                            </td>
+                                            <td>
+                                                @if (bid.IsWinning)
+                                                {
+                                                    <span class="badge bg-success">Winning</span>
+                                                }
+                                                else if (bid.IsOutbid)
+                                                {
+                                                    <span class="badge bg-secondary">Outbid</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-primary">Active</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center">No bids placed yet.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Back to Auction Button -->
+    <div class="text-center">
+        <a asp-action="AuctionDetails" asp-route-id="@Model.AuctionId" class="btn btn-primary">
+            <i class="fas fa-arrow-left"></i> Back to Auction
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-refresh if auction is active
+        @if (Model.IsActive)
+        {
+            <text>
+            setTimeout(function() {
+                location.reload();
+            }, 30000); // Refresh every 30 seconds
+            </text>
+        }
+    </script>
+} 

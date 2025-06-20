@@ -1,0 +1,87 @@
+@model IEnumerable<OnlineAuction.Models.Auction>
+
+@{ 
+    ViewData["Title"] = "Moderator Dashboard";
+}
+
+<div class="container mt-4 fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>@ViewData["Title"]</h2>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            No pending auctions to review.
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            @foreach (var auction in Model)
+            {
+                <div class="col">
+                    <div class="card h-100">
+                        @if (auction.Images != null && auction.Images.Any())
+                        {
+                            <div id="carousel-@auction.Id" class="carousel slide" data-bs-ride="carousel">
+                                <div class="carousel-inner">
+                                    @foreach (var image in auction.Images)
+                                    {
+                                        <div class="carousel-item @(image == auction.Images.First() ? "active" : "")">
+                                            <img src="@image.ImagePath" class="card-img-top" alt="@auction.Title" style="height: 200px; object-fit: cover;">
+                                        </div>
+                                    }
+                                </div>
+                                @if (auction.Images.Count > 1)
+                                {
+                                    <button class="carousel-control-prev" type="button" data-bs-target="#carousel-@auction.Id" data-bs-slide="prev">
+                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Previous</span>
+                                    </button>
+                                    <button class="carousel-control-next" type="button" data-bs-target="#carousel-@auction.Id" data-bs-slide="next">
+                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Next</span>
+                                    </button>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <i class="fas fa-image fa-2x text-muted"></i>
+                            </div>
+                        }
+                        <div class="card-body">
+                            <h5 class="card-title">@auction.Title</h5>
+                            <p class="card-text text-muted">
+                                <small>Category: @auction.Category?.Name</small>
+                            </p>
+                            <p class="card-text">@(auction.Description?.Length > 100 ? auction.Description.Substring(0, 100) + "..." : auction.Description)</p>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <div>
+                                    <strong class="text-primary">$@auction.StartingPrice.ToString("F2")</strong>
+                                    <br />
+                                    <small class="text-muted">Ends: @auction.EndDate.ToString("MMM dd, yyyy HH:mm")</small>
+                                </div>
+                                <a asp-controller="Home" asp-action="AuctionDetails" asp-route-id="@auction.Id" class="btn btn-sm btn-outline-info me-2">View</a>
+                                <form asp-action="ApproveAuction" asp-controller="Moderator" method="post">
+                                    <input type="hidden" name="id" value="@auction.Id" />
+                                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div> 

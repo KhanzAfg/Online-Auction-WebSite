@@ -1,0 +1,176 @@
+@model OnlineAuction.ViewModels.ProfileViewModel
+
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="container mt-4 fade-in">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        @if (!string.IsNullOrEmpty(Model.ProfileImagePath))
+                        {
+                            <img src="@Model.ProfileImagePath" alt="Profile Image" 
+                                 class="rounded-circle img-thumbnail" style="width: 120px; height: 120px; object-fit: cover;">
+                        }
+                        else
+                        {
+                            <i class="fas fa-user-circle fa-5x text-primary"></i>
+                        }
+                    </div>
+                    <h3 class="card-title">@Model.FullName</h3>
+                    <p class="text-muted">@Model.Email</p>
+                    @if (!string.IsNullOrEmpty(Model.PhoneNumber))
+                    {
+                        <p class="text-muted small">
+                            <i class="fas fa-phone me-1"></i>@Model.PhoneNumber
+                        </p>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Address))
+                    {
+                        <p class="text-muted small">
+                            <i class="fas fa-map-marker-alt me-1"></i>@Model.Address
+                        </p>
+                    }
+                    <div class="seller-rating mb-3">
+                        @for (int i = 0; i < 5; i++)
+                        {
+                            <i class="fas fa-star @(i < Model.Rating ? "text-warning" : "text-muted")"></i>
+                        }
+                        <span class="ms-2">(@Model.Rating.ToString("F1"))</span>
+                    </div>
+                    <a asp-action="EditProfile" class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-2"></i>Edit Profile
+                    </a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Account Statistics</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Active Auctions
+                            <span class="badge bg-primary rounded-pill">@Model.Auctions.Count(a => a.Status == AuctionStatus.Active)</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Total Bids
+                            <span class="badge bg-primary rounded-pill">@Model.Bids.Count</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Won Auctions
+                            <span class="badge bg-success rounded-pill">@Model.WonAuctionsCount</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4 class="card-title mb-4">Recent Activity</h4>
+                    <div class="timeline">
+                        @foreach (var bid in Model.Bids.OrderByDescending(b => b.BidTime).Take(5))
+                        {
+                            <div class="timeline-item">
+                                <div class="timeline-icon">
+                                    <i class="fas fa-gavel text-primary"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <h6>Placed a bid on @(bid.Auction?.Title ?? "Unknown Auction")</h6>
+                                    <p class="text-muted mb-0">
+                                        <small>@bid.BidTime.ToString("g")</small>
+                                    </p>
+                                    <p class="mb-0">Amount: $@bid.Amount.ToString("F2")</p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="card-title mb-4">Active Auctions</h4>
+                    <div class="row">
+                        @foreach (var auction in Model.Auctions.Where(a => a.Status == AuctionStatus.Active).Take(3))
+                        {
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    @if (!string.IsNullOrEmpty(auction.Images.FirstOrDefault()?.ImagePath))
+                                    {
+                                        <img src="@auction.Images.FirstOrDefault()?.ImagePath" class="card-img-top" alt="@auction.Title">
+                                    }
+                                    <div class="card-body">
+                                        <h6 class="card-title">@auction.Title</h6>
+                                        <p class="card-text">
+                                            <small class="text-muted">Current Bid: $@auction.CurrentBid?.Amount.ToString("F2")</small>
+                                        </p>
+                                        <a asp-controller="Home" asp-action="AuctionDetails" asp-route-id="@auction.Id" 
+                                           class="btn btn-sm btn-outline-primary">View Details</a>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding: 1rem 0;
+}
+
+.timeline-item {
+    position: relative;
+    padding-left: 3rem;
+    padding-bottom: 1.5rem;
+}
+
+.timeline-item:last-child {
+    padding-bottom: 0;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 1.5rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--background-color);
+}
+
+.timeline-icon {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 3rem;
+    height: 3rem;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--box-shadow);
+}
+
+.timeline-content {
+    background: white;
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+}
+
+.badge {
+    font-weight: 500;
+    padding: 0.5em 1em;
+}
+</style> 

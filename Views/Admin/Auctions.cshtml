@@ -1,0 +1,117 @@
+@model IEnumerable<OnlineAuction.Models.Auction>
+
+@{
+    ViewData["Title"] = "Manage Auctions";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <h1 class="h3 mb-2 text-gray-800">Manage Auctions</h1>
+    <p class="mb-4">Here you can view all auctions and manage their featured status.</p>
+
+    <div class="mb-3">
+        <input type="text" id="auctionSearch" class="form-control" placeholder="Search by title or seller..." />
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">All Auctions</h6>
+        </div>
+        <div class="card-body">
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success">@TempData["Success"]</div>
+            }
+            <div class="table-responsive">
+                <table class="table table-bordered" id="auctionsTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Image</th>
+                            <th>Title</th>
+                            <th>Seller</th>
+                            <th>Status</th>
+                            <th>Featured</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var auction in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <img src="@Url.Content((auction.Images?.FirstOrDefault(img => img.IsMainImage) ?? auction.Images?.FirstOrDefault())?.ImagePath ?? "/images/placeholder.png")" alt="@auction.Title" style="width: 48px; height: 48px; object-fit: cover; border-radius: 6px;" onerror="this.onerror=null;this.src='/images/placeholder.png';" />
+                                </td>
+                                <td>@auction.Title</td>
+                                <td>@auction.Seller?.FullName</td>
+                                <td>
+                                    @if (auction.IsActive)
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (auction.IsFeatured)
+                                    {
+                                        <span class="badge bg-warning text-dark">Yes</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-light text-dark">No</span>
+                                    }
+                                </td>
+                                <td>
+                                    <form asp-action="ToggleFeatured" asp-route-id="@auction.Id" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm @(auction.IsFeatured ? "btn-secondary" : "btn-warning")">
+                                            <i class="fas fa-star me-1"></i> @(auction.IsFeatured ? "Un-feature" : "Feature")
+                                        </button>
+                                    </form>
+                                    <form asp-action="ToggleActive" asp-route-id="@auction.Id" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm @(auction.IsActive ? "btn-danger" : "btn-success")">
+                                            <i class="fas fa-power-off me-1"></i> @(auction.IsActive ? "Deactivate" : "Activate")
+                                        </button>
+                                    </form>
+                                    <a asp-action="AuctionDetails" asp-controller="Home" asp-route-id="@auction.Id" class="btn btn-sm btn-info" target="_blank">
+                                        <i class="fas fa-eye me-1"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('auctionSearch').addEventListener('keyup', function () {
+            var value = this.value.toLowerCase();
+            var rows = document.querySelectorAll('#auctionsTable tbody tr');
+            rows.forEach(function (row) {
+                var title = row.children[1].textContent.toLowerCase();
+                var seller = row.children[2].textContent.toLowerCase();
+                row.style.display = (title.includes(value) || seller.includes(value)) ? '' : 'none';
+            });
+        });
+    </script>
+    <!-- Page level plugins -->
+    <script src="~/vendor/datatables/jquery.dataTables.min.js"></script>
+    <script src="~/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+    <!-- Page level custom scripts -->
+    <script>
+        $(document).ready(function() {
+            $('#auctionsTable').DataTable({
+                "order": [[ 1, "desc" ]],
+                "paging": true,
+                "info": true
+            });
+        });
+    </script>
+} 

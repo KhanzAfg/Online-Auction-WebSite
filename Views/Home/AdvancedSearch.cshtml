@@ -1,0 +1,250 @@
+@model dynamic
+@using OnlineAuction.Models
+@using OnlineAuction.ViewModels
+
+@{
+    var auctions = (IEnumerable<Auction>)Model.Auctions;
+    var searchModel = (SearchViewModel)Model.SearchModel;
+    ViewData["Title"] = "Advanced Search";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Search Filters Sidebar -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Search Filters</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="AdvancedSearch" method="get" id="searchForm">
+                        <!-- Search Term -->
+                        <div class="mb-3">
+                            <label asp-for="@searchModel.SearchTerm" class="form-label">Search Term</label>
+                            <input asp-for="@searchModel.SearchTerm" class="form-control" placeholder="Enter keywords...">
+                        </div>
+
+                        <!-- Category -->
+                        <div class="mb-3">
+                            <label asp-for="@searchModel.CategoryId" class="form-label">Category</label>
+                            <select asp-for="@searchModel.CategoryId" class="form-select">
+                                <option value="">All Categories</option>
+                                @foreach (var category in ViewBag.Categories)
+                                {
+                                    <option value="@category.Value" selected="@(searchModel.CategoryId?.ToString() == category.Value)">
+                                        @category.Text
+                                    </option>
+                                }
+                            </select>
+                        </div>
+
+                        <!-- Price Range -->
+                        <div class="mb-3">
+                            <label class="form-label">Price Range</label>
+                            <div class="row">
+                                <div class="col-6">
+                                    <input asp-for="@searchModel.MinPrice" class="form-control" placeholder="Min" type="number" step="0.01" min="0">
+                                </div>
+                                <div class="col-6">
+                                    <input asp-for="@searchModel.MaxPrice" class="form-control" placeholder="Max" type="number" step="0.01" min="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Date Range -->
+                        <div class="mb-3">
+                            <label class="form-label">Date Range</label>
+                            <div class="mb-2">
+                                <input asp-for="@searchModel.StartDate" class="form-control" type="date">
+                            </div>
+                            <div>
+                                <input asp-for="@searchModel.EndDate" class="form-control" type="date">
+                            </div>
+                        </div>
+
+                        <!-- Status Filters -->
+                        <div class="mb-3">
+                            <label class="form-label">Auction Status</label>
+                            <div class="form-check">
+                                <input asp-for="@searchModel.ShowActiveOnly" class="form-check-input" type="checkbox">
+                                <label asp-for="@searchModel.ShowActiveOnly" class="form-check-label">Active Only</label>
+                            </div>
+                            <div class="form-check">
+                                <input asp-for="@searchModel.ShowEnded" class="form-check-input" type="checkbox">
+                                <label asp-for="@searchModel.ShowEnded" class="form-check-label">Include Ended</label>
+                            </div>
+                        </div>
+
+                        <!-- Sort Options -->
+                        <div class="mb-3">
+                            <label asp-for="@searchModel.SortBy" class="form-label">Sort By</label>
+                            <select asp-for="@searchModel.SortBy" class="form-select">
+                                <option value="newest">Newest First</option>
+                                <option value="oldest">Oldest First</option>
+                                <option value="price">Price</option>
+                                <option value="title">Title</option>
+                                <option value="endDate">End Date</option>
+                                <option value="bids">Number of Bids</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="@searchModel.SortOrder" class="form-label">Sort Order</label>
+                            <select asp-for="@searchModel.SortOrder" class="form-select">
+                                <option value="desc">Descending</option>
+                                <option value="asc">Ascending</option>
+                            </select>
+                        </div>
+
+                        <!-- Search Button -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                        </div>
+
+                        <!-- Clear Filters -->
+                        <div class="d-grid mt-2">
+                            <a asp-action="AdvancedSearch" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Clear Filters
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Results -->
+        <div class="col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Search Results</h2>
+                <div class="text-muted">
+                    @ViewBag.TotalCount results found
+                </div>
+            </div>
+
+            @if (auctions.Any())
+            {
+                <!-- Results Grid -->
+                <div class="row">
+                    @foreach (var auction in auctions)
+                    {
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100">
+                                @if (auction.Images.Any())
+                                {
+                                    <img src="@auction.Images.First().ImagePath" class="card-img-top" alt="@auction.Title" style="height: 200px; object-fit: cover;">
+                                }
+                                else
+                                {
+                                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                        <i class="fas fa-image fa-3x text-muted"></i>
+                                    </div>
+                                }
+                                
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title product-title">@auction.Title</h5>
+                                    <style>
+                                        .product-title {
+                                            color: var(--bs-body-color);
+                                            font-weight: 700;
+                                        }
+                                    </style>
+                                    <p class="card-text text-muted">@auction.Category?.Name</p>
+                                    
+                                    <!-- Seller Information -->
+                                    <div class="d-flex align-items-center mb-3">
+                                        @if (!string.IsNullOrEmpty(auction.Seller?.ProfileImagePath))
+                                        {
+                                            <img src="@auction.Seller.ProfileImagePath" alt="@auction.Seller.FullName" 
+                                                 class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover;">
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-user-circle me-2 text-muted" style="font-size: 30px;"></i>
+                                        }
+                                        <small class="text-muted">by @auction.Seller?.FullName</small>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <strong class="text-primary">Current Bid: $@(auction.CurrentBid?.Amount ?? auction.StartingPrice)</strong>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock"></i> Ends: @auction.EndDate.ToString("MMM dd, yyyy HH:mm")
+                                        </small>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <small class="text-muted">
+                                            <i class="fas fa-gavel"></i> @auction.Bids.Count bids
+                                        </small>
+                                    </div>
+                                    
+                                    <div class="mt-auto">
+                                        <a asp-action="AuctionDetails" asp-route-id="@auction.Id" class="btn btn-primary w-100">
+                                            <i class="fas fa-eye"></i> View Details
+                                        </a>
+                                    </div>
+                                </div>
+                                
+                                @if (auction.Status == AuctionStatus.Ended || auction.EndDate <= DateTime.UtcNow)
+                                {
+                                    <div class="card-footer bg-warning text-dark">
+                                        <small><i class="fas fa-exclamation-triangle"></i> Auction Ended</small>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Pagination -->
+                @if (ViewBag.TotalPages > 1)
+                {
+                    <nav aria-label="Search results pagination">
+                        <ul class="pagination justify-content-center">
+                            @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                            {
+                                <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                    <a class="page-link" href="#" onclick="goToPage(@i)">@i</a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                }
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-4x text-muted mb-4"></i>
+                    <h4 class="text-muted">No results found</h4>
+                    <p class="text-muted">Try adjusting your search criteria or browse all auctions.</p>
+                    <a asp-action="Index" class="btn btn-primary">Browse All Auctions</a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function goToPage(page) {
+            const form = document.getElementById('searchForm');
+            const pageInput = document.createElement('input');
+            pageInput.type = 'hidden';
+            pageInput.name = 'Page';
+            pageInput.value = page;
+            form.appendChild(pageInput);
+            form.submit();
+        }
+
+        // Auto-submit form when filters change
+        document.querySelectorAll('#searchForm select, #searchForm input[type="checkbox"]').forEach(element => {
+            element.addEventListener('change', function() {
+                document.getElementById('searchForm').submit();
+            });
+        });
+    </script>
+} 

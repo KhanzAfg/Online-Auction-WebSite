@@ -1,0 +1,397 @@
+@model OnlineAuction.Models.Auction
+@using System.Security.Claims
+@inject OnlineAuction.Data.ApplicationDbContext DbContext
+
+@{
+    ViewData["Title"] = Model.Title;
+    var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var isSeller = currentUserId == Model.SellerId;
+    
+    // Check if auction is in user's watchlist
+    var isInWatchlist = false;
+    if (!string.IsNullOrEmpty(currentUserId))
+    {
+        isInWatchlist = DbContext.Watchlist.Any(w => w.UserId == currentUserId && w.AuctionId == Model.Id);
+    }
+}
+
+<div class="container mt-4 fade-in">
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="Index">Home</a></li>
+            <li class="breadcrumb-item"><a asp-action="Categories">Categories</a></li>
+            <li class="breadcrumb-item"><a asp-action="Category" asp-route-id="@Model.CategoryId">@Model.Category?.Name</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@Model.Title</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Left Column: Images -->
+        <div class="col-md-6 mb-4">
+            @if (Model.Images.Any())
+            {
+                <div id="auctionImages" class="carousel slide" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+                        @foreach (var image in Model.Images)
+                        {
+                            <div class="carousel-item @(image.IsMainImage ? "active" : "")">
+                                <img src="@image.ImagePath" class="d-block w-100" alt="@Model.Title" style="height: 400px; object-fit: contain;">
+                            </div>
+                        }
+                    </div>
+                    @if (Model.Images.Count > 1)
+                    {
+                        <button class="carousel-control-prev" type="button" data-bs-target="#auctionImages" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#auctionImages" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="bg-light d-flex align-items-center justify-content-center" style="height: 400px;">
+                    <i class="fas fa-image fa-4x text-muted"></i>
+                </div>
+            }
+        </div>
+
+        <!-- Right Column: Details -->
+        <div class="col-md-6">
+            <h1 class="mb-3 product-title">@Model.Title</h1>
+            <style>
+                .product-title {
+                    color: var(--bs-body-color);
+                    font-weight: 700;
+                }
+            </style>
+            
+            <div class="mb-4">
+                <h5>Description</h5>
+                <p class="text-muted">@Model.Description</p>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.SpecificationDocumentPath))
+            {
+                <div class="mb-4">
+                    <h5>Specification Document</h5>
+                    <a href="@Model.SpecificationDocumentPath" class="btn btn-outline-primary" target="_blank">
+                        <i class="fas fa-file-alt me-2"></i>View Document
+                    </a>
+                </div>
+            }
+
+            <div class="mb-4">
+                <h5>Seller Information</h5>
+                <p>
+                    <a href="@Url.Action("SellerProfile", "Home", new { id = Model.SellerId })" class="text-decoration-none">
+                        <i class="fas fa-user me-2"></i>@Model.Seller?.FullName
+                    </a>
+                </p>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Bidding Information</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong>Starting Price:</strong>
+                                <span class="text-primary">$@Model.StartingPrice.ToString("F2")</span>
+                            </p>
+                            <p class="mb-2">
+                                <strong>Bid Increment:</strong>
+                                <span class="text-primary">$@Model.BidIncrement.ToString("F2")</span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <strong>Current Bid:</strong>
+                                @if (Model.CurrentBid != null)
+                                {
+                                    <span class="text-success">$@Model.CurrentBid.Amount.ToString("F2")</span>
+                                }
+                                else
+                                {
+                                    <span class="text-primary">$@Model.StartingPrice.ToString("F2")</span>
+                                }
+                            </p>
+                            <p class="mb-2">
+                                <strong>Number of Bids:</strong>
+                                <span>@Model.Bids.Count</span>
+                            </p>
+                            <p class="mb-2">
+                                <strong>Ends:</strong>
+                                <span id="auctionCountdown" data-end="@Model.EndDate.ToString("yyyy-MM-ddTHH:mm:ss")">
+                                    @Model.EndDate.ToString("MMM dd, yyyy HH:mm")
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
+                    @if (!isSeller && Model.Status == AuctionStatus.Active && Model.EndDate > DateTime.UtcNow)
+                    {
+                        <form asp-action="PlaceBid" method="post" class="mt-3">
+                            <input type="hidden" name="auctionId" value="@Model.Id" />
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" name="amount" class="form-control" 
+                                       step="@Model.BidIncrement.ToString("F2")" 
+                                       placeholder="Enter bid amount" />
+                                <button type="submit" class="btn btn-primary">Place Bid</button>
+                            </div>
+                            <small class="text-muted">
+                                Minimum bid: $@(Model.CurrentBid?.Amount + Model.BidIncrement ?? Model.StartingPrice)
+                            </small>
+                        </form>
+                    }
+                    else if (isSeller)
+                    {
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle me-2"></i>
+                            You cannot bid on your own auction.
+                        </div>
+                    }
+                    else if (Model.Status != AuctionStatus.Active)
+                    {
+                        <div class="alert alert-warning mt-3">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            This auction has ended.
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <h5>Bid History</h5>
+                @if (Model.Bids.Any())
+                {
+                    var winningBid = Model.Bids.OrderByDescending(b => b.Amount).FirstOrDefault();
+                    <div class="list-group">
+                        @foreach (var bid in Model.Bids.OrderByDescending(b => b.Amount))
+                        {
+                            var isWinning = winningBid != null && bid.Id == winningBid.Id;
+                            var isOutbid = !isWinning;
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    @if (!string.IsNullOrEmpty(bid.Bidder?.ProfileImagePath))
+                                    {
+                                        <img src="@bid.Bidder.ProfileImagePath" alt="@bid.Bidder.FullName" 
+                                             class="rounded-circle me-2" style="width: 25px; height: 25px; object-fit: cover;">
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-user-circle me-2 text-muted" style="font-size: 25px;"></i>
+                                    }
+                                    <div>
+                                        <strong>$@bid.Amount.ToString("F2")</strong>
+                                        <small class="text-muted d-block">
+                                            by @bid.Bidder?.FullName
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <small class="text-muted me-2">
+                                        @bid.BidTime.ToString("MMM dd, yyyy HH:mm")
+                                    </small>
+                                    @if (isWinning)
+                                    {
+                                        <span class="badge bg-success">Winning</span>
+                                    }
+                                    else if (isOutbid)
+                                    {
+                                        <span class="badge bg-secondary">Outbid</span>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="mt-3">
+                        <a asp-action="BidHistory" asp-route-id="@Model.Id" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-chart-line"></i> View Detailed Bid History
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted">No bids yet.</p>
+                }
+            </div>
+
+            @if (!isSeller)
+            {
+                <div class="d-flex gap-2">
+                    @if (!string.IsNullOrEmpty(currentUserId))
+                    {
+                        @if (isInWatchlist)
+                        {
+                            <form asp-action="RemoveFromWatchlist" method="post" class="d-inline">
+                                <input type="hidden" name="auctionId" value="@Model.Id" />
+                                <button type="submit" class="btn btn-outline-danger">
+                                    <i class="fas fa-heart-broken me-2"></i>Remove from Watchlist
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <form asp-action="AddToWatchlist" method="post" class="d-inline">
+                                <input type="hidden" name="auctionId" value="@Model.Id" />
+                                <button type="submit" class="btn btn-outline-primary">
+                                    <i class="fas fa-heart me-2"></i>Add to Watchlist
+                                </button>
+                            </form>
+                        }
+                    }
+                    <a href="@Url.Action("ReportAuction", "Home", new { id = Model.Id })" 
+                       class="btn btn-outline-danger">
+                        <i class="fas fa-flag me-2"></i>Report Auction
+                    </a>
+                </div>
+            }
+
+            @if (Model.Status == AuctionStatus.Ended)
+            {
+                var winningBid = Model.Bids.OrderByDescending(b => b.Amount).FirstOrDefault();
+                if (winningBid != null)
+                {
+                    <div class="alert alert-success mt-4">
+                        <h5 class="alert-heading">Auction Ended</h5>
+                        <p class="mb-0">
+                            Winner: @winningBid.Bidder?.FullName<br />
+                            Winning Bid: $@winningBid.Amount.ToString("F2")
+                        </p>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Countdown timer functionality
+        function updateAuctionCountdown() {
+            const countdownElement = document.getElementById('auctionCountdown');
+            if (!countdownElement) return;
+            
+            const endDate = new Date(countdownElement.dataset.end);
+            const now = new Date();
+            const timeLeft = endDate - now;
+            
+            if (timeLeft <= 0) {
+                countdownElement.innerHTML = '<span class="text-danger fw-bold">Auction Ended</span>';
+                // Disable bidding form if it exists
+                const bidForm = document.querySelector('form[asp-action="PlaceBid"]');
+                if (bidForm) {
+                    bidForm.style.display = 'none';
+                }
+                // Show auction ended message
+                const bidInfo = document.querySelector('.card-body');
+                if (bidInfo) {
+                    const endedAlert = document.createElement('div');
+                    endedAlert.className = 'alert alert-warning mt-3';
+                    endedAlert.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>This auction has ended.';
+                    bidInfo.appendChild(endedAlert);
+                }
+            } else {
+                const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                
+                let timeString = '';
+                if (days > 0) {
+                    timeString = `${days} days, ${hours} hours, ${minutes} minutes`;
+                } else if (hours > 0) {
+                    timeString = `${hours} hours, ${minutes} minutes, ${seconds} seconds`;
+                } else if (minutes > 0) {
+                    timeString = `${minutes} minutes, ${seconds} seconds`;
+                } else {
+                    timeString = `${seconds} seconds`;
+                }
+                
+                // Add color coding based on time remaining
+                let colorClass = '';
+                if (timeLeft < 60000) { // Less than 1 minute
+                    colorClass = 'text-danger fw-bold';
+                } else if (timeLeft < 300000) { // Less than 5 minutes
+                    colorClass = 'text-warning fw-bold';
+                } else if (timeLeft < 3600000) { // Less than 1 hour
+                    colorClass = 'text-warning';
+                }
+                
+                countdownElement.innerHTML = `<span class="${colorClass}">${timeString}</span>`;
+            }
+        }
+        
+        // Update countdown every second
+        setInterval(updateAuctionCountdown, 1000);
+        
+        // Initial update
+        document.addEventListener('DOMContentLoaded', updateAuctionCountdown);
+        
+        // Set initial value and provide better user experience
+        document.addEventListener('DOMContentLoaded', function() {
+            const bidInput = document.querySelector('input[name="amount"]');
+            const form = document.querySelector('form[asp-action="PlaceBid"]');
+            
+            if (bidInput && form) {
+                const minBid = @(Model.CurrentBid?.Amount + Model.BidIncrement ?? Model.StartingPrice);
+                const increment = @Model.BidIncrement;
+                
+                // Set initial value to minimum bid
+                bidInput.value = minBid.toFixed(2);
+                
+                // Only validate on blur (when user leaves the field)
+                bidInput.addEventListener('blur', function(e) {
+                    const value = parseFloat(e.target.value);
+                    
+                    if (isNaN(value) || value < minBid) {
+                        e.target.value = minBid.toFixed(2);
+                    } else {
+                        // Round up to the nearest increment
+                        const remainder = (value - minBid) % increment;
+                        if (remainder !== 0) {
+                            e.target.value = (value - remainder + increment).toFixed(2);
+                        }
+                    }
+                });
+                
+                // Handle form submission
+                form.addEventListener('submit', function(e) {
+                    const value = parseFloat(bidInput.value);
+                    
+                    // If no value or invalid value, set to minimum
+                    if (isNaN(value) || value < minBid) {
+                        bidInput.value = minBid.toFixed(2);
+                    }
+                    
+                    // Ensure the form submits
+                    return true;
+                });
+                
+                // Add placeholder text
+                bidInput.placeholder = `Minimum: $${minBid.toFixed(2)}`;
+            }
+        });
+    </script>
+} 

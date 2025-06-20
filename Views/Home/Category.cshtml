@@ -1,0 +1,66 @@
+@model OnlineAuction.ViewModels.CategoryViewModel
+
+@{
+    ViewData["Title"] = Model.Category.Name;
+}
+
+<div class="container mb-5">
+    <h1 class="mb-2">@Model.Category.Name</h1>
+    <p class="lead mb-4">@Model.Category.Description</p>
+    
+    <div class="row g-4">
+        @foreach (var auction in Model.Auctions)
+        {
+            <div class="col-6 col-sm-6 col-md-4 col-lg-3">
+                <a asp-action="AuctionDetails" asp-route-id="@auction.Id" class="text-decoration-none">
+                    <div class="card h-100 shadow-sm transition-shadow">
+                        @if (auction.IsFeatured)
+                        {
+                            <div class="featured-badge-small">Featured</div>
+                        }
+                        <img src="@(auction.Images != null && auction.Images.Any() ? auction.Images.First().ImagePath : "/images/placeholder.png")" class="card-img-top" alt="@auction.Title" style="height: 180px; object-fit: cover;">
+                        <div class="card-body">
+                            <h5 class="card-title">@auction.Title</h5>
+                            <p class="card-text mb-1"><strong>Current:</strong> $@(auction.CurrentBid?.Amount ?? auction.StartingPrice)</p>
+                            <p class="card-text mb-1"><strong>Support:</strong> @auction.Seller?.FullName</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        }
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        <nav aria-label="Auction pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                        <a class="page-link" href="@Url.Action("Category", new { id = Model.Category.Id, page = i })">@i</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
+</div>
+
+<style>
+    .featured-badge-small {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background-color: #ffc107;
+        color: #212529;
+        padding: 0.25rem 0.5rem;
+        font-weight: 600;
+        font-size: 0.75rem;
+        border-radius: 0.25rem;
+        z-index: 10;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .card.transition-shadow:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 0.4rem 1rem rgba(0,0,0,0.12) !important;
+    }
+</style> 

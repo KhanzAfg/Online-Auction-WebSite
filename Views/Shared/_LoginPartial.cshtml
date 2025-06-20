@@ -1,0 +1,163 @@
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject OnlineAuction.Data.ApplicationDbContext DbContext
+
+@if (SignInManager.IsSignedIn(User))
+{
+    var currentUser = await UserManager.GetUserAsync(User);
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            @if (!string.IsNullOrEmpty(currentUser?.ProfileImagePath))
+            {
+                <img src="@currentUser.ProfileImagePath" alt="@currentUser.FullName" 
+                     class="rounded-circle me-1" style="width: 25px; height: 25px; object-fit: cover;">
+            }
+            else
+            {
+                <i class="fas fa-user-circle me-1"></i>
+            }
+            @currentUser?.FullName
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end user-dropdown" aria-labelledby="navbarDropdown" style="max-height: 70vh; overflow-y: auto;">
+            <!-- Account Section -->
+            <li><h6 class="dropdown-header">Account</h6></li>
+            <li>
+                <a class="dropdown-item" asp-controller="Account" asp-action="Profile">
+                    <i class="fas fa-user me-2"></i>Profile
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item" asp-controller="Account" asp-action="EditProfile">
+                    <i class="fas fa-edit me-2"></i>Edit Profile
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item" asp-controller="Account" asp-action="ChangePassword">
+                    <i class="fas fa-key me-2"></i>Change Password
+                </a>
+            </li>
+            
+            <li><hr class="dropdown-divider"></li>
+            
+            <!-- My Items Section -->
+            <li><h6 class="dropdown-header">My Items</h6></li>
+            <li>
+                <a class="dropdown-item" asp-controller="Home" asp-action="MyAuctions">
+                    <i class="fas fa-gavel me-2"></i>My Auctions
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item" asp-controller="Home" asp-action="MyBids">
+                    <i class="fas fa-hand-holding-usd me-2"></i>My Bids
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item" asp-controller="Home" asp-action="MyWatchlist">
+                    <i class="fas fa-heart me-2"></i>My Watchlist
+                </a>
+            </li>
+            
+            @if (User.IsInRole("Admin"))
+            {
+                <li><hr class="dropdown-divider"></li>
+                <li><h6 class="dropdown-header">Admin Panel</h6></li>
+                <li>
+                    <a class="dropdown-item" asp-controller="Admin" asp-action="Index">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" asp-controller="Admin" asp-action="Categories">
+                        <i class="fas fa-tags me-2"></i>Categories
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" asp-controller="Admin" asp-action="Reports">
+                        <i class="fas fa-flag me-2"></i>Reports
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" asp-controller="Admin" asp-action="Users">
+                        <i class="fas fa-users me-2"></i>Users
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" asp-controller="Admin" asp-action="Auctions">
+                        <i class="fas fa-gavel me-2"></i>Manage Auctions
+                    </a>
+                </li>
+            }
+            
+            @if (User.IsInRole("Admin") || User.IsInRole("Moderator"))
+            {
+                <li><hr class="dropdown-divider"></li>
+                <li><h6 class="dropdown-header">Moderator Panel</h6></li>
+                <li>
+                    <a class="dropdown-item" asp-controller="Moderator" asp-action="Index">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" asp-controller="Moderator" asp-action="Reports">
+                        <i class="fas fa-flag me-2"></i>Reports
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" asp-controller="Moderator" asp-action="Auctions">
+                        <i class="fas fa-gavel me-2"></i>Auctions
+                    </a>
+                </li>
+            }
+            
+            <li><hr class="dropdown-divider"></li>
+            
+            <!-- Logout Section - Always at bottom -->
+            <li>
+                <form class="form-inline" asp-controller="Account" asp-action="Logout" method="post">
+                    <button type="submit" class="dropdown-item text-danger">
+                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                    </button>
+                </form>
+            </li>
+        </ul>
+    </li>
+}
+else
+{
+    <li class="nav-item">
+        <a class="nav-link text-dark" asp-controller="Account" asp-action="Register">
+            <i class="fas fa-user-plus me-1"></i>Register
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">
+            <i class="fas fa-sign-in-alt me-1"></i>Login
+        </a>
+    </li>
+}
+
+<style>
+.user-dropdown {
+    min-width: 250px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.user-dropdown .dropdown-header {
+    font-weight: 600;
+    color: var(--bs-primary);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.user-dropdown .dropdown-item {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+.user-dropdown .dropdown-divider {
+    margin: 0.5rem 0;
+}
+</style> 

@@ -1,0 +1,196 @@
+@using OnlineAuction.Models
+@using OnlineAuction.ViewModels
+@model IEnumerable<AuctionReport>
+
+@{
+    ViewData["Title"] = "Auction Reports";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Auction Reports</h2>
+        <a asp-action="Index" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                All Reports (@Model.Count())
+                <span class="badge bg-success ms-2">@Model.Count(r => r.IsResolved) Resolved</span>
+                <span class="badge bg-warning ms-1">@Model.Count(r => !r.IsResolved) Pending</span>
+            </h5>
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="filterReports('all')">All</button>
+                <button type="button" class="btn btn-outline-warning btn-sm" onclick="filterReports('pending')">Pending</button>
+                <button type="button" class="btn btn-outline-success btn-sm" onclick="filterReports('resolved')">Resolved</button>
+            </div>
+        </div>
+        <div class="card-body">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped" id="reportsTable">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Auction</th>
+                                <th>Reporter</th>
+                                <th>Reason</th>
+                                <th>Reported At</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var report in Model)
+                            {
+                                <tr class="report-row @(report.IsResolved ? "resolved" : "pending")">
+                                    <td>@report.Id</td>
+                                    <td>
+                                        @if (report.Auction != null)
+                                        {
+                                            <a asp-controller="Home" asp-action="AuctionDetails" asp-route-id="@report.AuctionId" target="_blank">
+                                                <h1 class="mb-3 text-body">@report.Auction.Title</h1>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Auction deleted</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (report.Reporter != null)
+                                        {
+                                            @report.Reporter.UserName
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">User deleted</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="text-truncate" style="max-width: 200px;" title="@report.Reason">
+                                            @report.Reason
+                                        </div>
+                                    </td>
+                                    <td>@report.ReportedAt.ToString("MMM dd, yyyy HH:mm")</td>
+                                    <td>
+                                        @if (report.IsResolved)
+                                        {
+                                            <span class="badge bg-success">Resolved</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning">Pending</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            @if (!report.IsResolved)
+                                            {
+                                                <form asp-action="ResolveReport" method="post" class="d-inline">
+                                                    <input type="hidden" name="id" value="@report.Id" />
+                                                    <button type="submit" class="btn btn-success btn-sm" 
+                                                            title="Mark as resolved - Report was incorrect or issue has been addressed"
+                                                            onclick="return confirm('Mark this report as resolved? This indicates the report was incorrect or the issue has been addressed.')">
+                                                        <i class="fas fa-check"></i> Resolve
+                                                    </button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <form asp-action="UnresolveReport" method="post" class="d-inline">
+                                                    <input type="hidden" name="id" value="@report.Id" />
+                                                    <button type="submit" class="btn btn-warning btn-sm" 
+                                                            title="Mark as pending - Reopen this report for further review"
+                                                            onclick="return confirm('Mark this report as pending? This will reopen the report for further review.')">
+                                                        <i class="fas fa-undo"></i> Reopen
+                                                    </button>
+                                                </form>
+                                            }
+                                            <form asp-action="DeleteReport" method="post" class="d-inline">
+                                                <input type="hidden" name="id" value="@report.Id" />
+                                                <button type="submit" class="btn btn-danger btn-sm" 
+                                                        title="Permanently delete this report"
+                                                        onclick="return confirm('Are you sure you want to delete this report? This action cannot be undone.')">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-4">
+                    <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No reports found</h5>
+                    <p class="text-muted">There are currently no auction reports to display.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-hide alerts after 5 seconds
+        setTimeout(function() {
+            var alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                var bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+
+        // Filter reports by status
+        function filterReports(status) {
+            const rows = document.querySelectorAll('.report-row');
+            
+            rows.forEach(row => {
+                switch(status) {
+                    case 'pending':
+                        row.style.display = row.classList.contains('pending') ? '' : 'none';
+                        break;
+                    case 'resolved':
+                        row.style.display = row.classList.contains('resolved') ? '' : 'none';
+                        break;
+                    default: // 'all'
+                        row.style.display = '';
+                        break;
+                }
+            });
+
+            // Update button states
+            document.querySelectorAll('.btn-group .btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        // Initialize with all reports shown
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelector('.btn-group .btn:first-child').classList.add('active');
+        });
+    </script>
+} 

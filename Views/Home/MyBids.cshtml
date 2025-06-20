@@ -1,0 +1,188 @@
+@model IEnumerable<OnlineAuction.Models.Bid>
+
+@{
+    ViewData["Title"] = "My Bids";
+}
+
+<div class="container mt-4 fade-in">
+    <h2 class="mb-4">My Bids</h2>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <select class="form-select" id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="winning">Winning</option>
+                        <option value="outbid">Outbid</option>
+                        <option value="ended">Ended</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select" id="sortBy">
+                        <option value="recent">Most Recent</option>
+                        <option value="highest">Highest Bid</option>
+                        <option value="lowest">Lowest Bid</option>
+                        <option value="ending">Ending Soon</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Search items...">
+                        <button class="btn btn-outline-secondary" type="button">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row" id="bidsList">
+        @foreach (var bid in Model)
+        {
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="row g-0">
+                        <div class="col-md-4">
+                            @if (!string.IsNullOrEmpty(bid.Auction.Images.FirstOrDefault()?.ImagePath))
+                            {
+                                <img src="@bid.Auction.Images.FirstOrDefault()?.ImagePath" class="img-fluid rounded-start h-100" style="object-fit: cover;" alt="@bid.Auction.Title">
+                            }
+                            else
+                            {
+                                <div class="bg-light h-100 d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-image fa-2x text-muted"></i>
+                                </div>
+                            }
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <h5 class="card-title mb-0">@bid.Auction.Title</h5>
+                                    <span class="badge @(bid.IsWinning ? "bg-success" : 
+                                                      bid.Auction.Status == AuctionStatus.Active ? "bg-warning" : "bg-secondary")">
+                                        @(bid.IsWinning ? "Winning" : 
+                                          bid.Auction.Status == AuctionStatus.Active ? "Outbid" : "Ended")
+                                    </span>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <p class="mb-1">
+                                            <strong>Your Bid:</strong><br>
+                                            <span class="text-primary">$@bid.Amount.ToString("F2")</span>
+                                        </p>
+                                        <p class="mb-1">
+                                            <strong>Bid Time:</strong><br>
+                                            <span class="text-muted">@bid.BidTime.ToString("g")</span>
+                                        </p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p class="mb-1">
+                                            <strong>Current Price:</strong><br>
+                                            <span class="text-primary">$@bid.Auction.CurrentBid?.Amount.ToString("F2")</span>
+                                        </p>
+                                        <p class="mb-1">
+                                            <strong>Ends:</strong><br>
+                                            <span class="text-muted">@bid.Auction.EndDate.ToString("g")</span>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <a asp-action="AuctionDetails" asp-route-id="@bid.Auction.Id" 
+                                       class="btn btn-outline-primary flex-grow-1">
+                                        <i class="fas fa-eye me-2"></i>View Item
+                                    </a>
+                                    @if (bid.Auction.Status == AuctionStatus.Active && !bid.IsWinning)
+                                    {
+                                        <a asp-action="AuctionDetails" asp-route-id="@bid.Auction.Id" 
+                                           class="btn btn-primary">
+                                            <i class="fas fa-gavel me-2"></i>Bid Again
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <i class="fas fa-gavel fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">No bids found</h4>
+            <p class="text-muted">Start bidding on items to see them here!</p>
+            <a asp-action="Index" class="btn btn-primary mt-3">
+                <i class="fas fa-search me-2"></i>Browse Items
+            </a>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const statusFilter = document.getElementById('statusFilter');
+            const sortBy = document.getElementById('sortBy');
+            const searchInput = document.getElementById('searchInput');
+            const bidsList = document.getElementById('bidsList');
+
+            function filterAndSort() {
+                const status = statusFilter.value.toLowerCase();
+                const sort = sortBy.value;
+                const search = searchInput.value.toLowerCase();
+
+                const bids = Array.from(bidsList.children);
+                
+                // Filter
+                bids.forEach(bid => {
+                    const bidStatus = bid.querySelector('.badge').textContent.trim().toLowerCase();
+                    const title = bid.querySelector('.card-title').textContent.toLowerCase();
+                    const matchesStatus = !status || bidStatus === status;
+                    const matchesSearch = !search || title.includes(search);
+                    
+                    bid.style.display = matchesStatus && matchesSearch ? 'block' : 'none';
+                });
+
+                // Sort
+                const visibleBids = bids.filter(b => b.style.display !== 'none');
+                visibleBids.sort((a, b) => {
+                    const aTitle = a.querySelector('.card-title').textContent;
+                    const bTitle = b.querySelector('.card-title').textContent;
+                    const aBid = parseFloat(a.querySelector('.text-primary').textContent.replace('$', ''));
+                    const bBid = parseFloat(b.querySelector('.text-primary').textContent.replace('$', ''));
+                    const aTime = new Date(a.querySelector('.text-muted').textContent);
+                    const bTime = new Date(b.querySelector('.text-muted').textContent);
+                    const aEnds = new Date(a.querySelectorAll('.text-muted')[1].textContent);
+                    const bEnds = new Date(b.querySelectorAll('.text-muted')[1].textContent);
+
+                    switch(sort) {
+                        case 'recent':
+                            return bTime - aTime;
+                        case 'highest':
+                            return bBid - aBid;
+                        case 'lowest':
+                            return aBid - bBid;
+                        case 'ending':
+                            return aEnds - bEnds;
+                        default:
+                            return 0;
+                    }
+                });
+
+                // Reorder in DOM
+                visibleBids.forEach(bid => bidsList.appendChild(bid));
+            }
+
+            statusFilter.addEventListener('change', filterAndSort);
+            sortBy.addEventListener('change', filterAndSort);
+            searchInput.addEventListener('input', filterAndSort);
+        });
+    </script>
+} 

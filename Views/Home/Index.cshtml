@@ -1,0 +1,203 @@
+@model OnlineAuction.ViewModels.HomePageViewModel
+
+@{
+    ViewData["Title"] = "Home";
+}
+
+<!-- Auction Grid -->
+<div class="container mb-5">
+    <h2 class="mb-4">Current Auctions</h2>
+    <div class="row g-4">
+        @foreach (var auction in Model.Auctions)
+        {
+            <div class="col-6 col-sm-6 col-md-4 col-lg-3">
+                <div class="card h-100 shadow-sm">
+                    <img src="@(auction.Images != null && auction.Images.Any() ? auction.Images.First().ImagePath : "/images/placeholder.png")" class="card-img-top" alt="@auction.Title" style="height: 180px; object-fit: cover;">
+                    <div class="card-body">
+                        <h5 class="card-title">@auction.Title</h5>
+                        <p class="card-text mb-1"><strong>Current:</strong> $@(auction.CurrentBid?.Amount ?? auction.StartingPrice)</p>
+                        <p class="card-text mb-1"><strong>Support:</strong> @auction.Seller?.FullName</p>
+                        <a asp-action="AuctionDetails" asp-route-id="@auction.Id" class="btn btn-primary btn-sm mt-2 w-100">View Details</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+    @if (Model.TotalPages > 1)
+    {
+        <nav aria-label="Auction pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                        <a class="page-link" href="@Url.Action("Index", new { page = i })">@i</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
+</div>
+
+<!-- Featured Auctions -->
+@if (Model.FeaturedAuctions.Any())
+{
+    <div class="container mb-5">
+        <h2 class="mb-4">Featured Auctions</h2>
+        <div class="position-relative featured-auctions-wrapper">
+            <div class="swiper-container featured-swiper">
+                <div class="swiper-wrapper">
+                    @foreach (var auction in Model.FeaturedAuctions)
+                    {
+                        <div class="swiper-slide">
+                            <a asp-action="AuctionDetails" asp-route-id="@auction.Id" class="text-decoration-none text-reset">
+                                <div class="card h-100 shadow-sm featured-card">
+                                    <div class="featured-badge">Featured</div>
+                                    <img src="@(auction.Images != null && auction.Images.Any() ? auction.Images.First().ImagePath : "/images/placeholder.png")" class="card-img-top" alt="@auction.Title" style="height: 220px; object-fit: cover;">
+                                    <div class="card-body">
+                                        <h4 class="card-title">@auction.Title</h4>
+                                        <p class="card-text">Ends in @((auction.EndTime - DateTime.UtcNow).Days)d @((auction.EndTime - DateTime.UtcNow).Hours)h</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+            <!-- Add Arrows -->
+            <div class="swiper-button-next"></div>
+            <div class="swiper-button-prev"></div>
+        </div>
+    </div>
+}
+
+<!-- Categories -->
+<div class="container mb-5">
+    <h2 class="mb-4">Item Categories</h2>
+    <div class="row g-4">
+        @foreach (var category in Model.Categories)
+        {
+            <div class="col-6 col-md-3">
+                <a href="@Url.Action("Category", "Home", new { id = category.Id })" class="text-decoration-none text-dark">
+                    <div class="card h-100 text-center">
+                        <img src="@(string.IsNullOrEmpty(category.ImagePath) ? "/images/category-placeholder.png" : category.ImagePath)" class="card-img-top" alt="@category.Name" style="height: 120px; object-fit: cover;">
+                        <div class="card-body">
+                            <h6 class="card-title">@category.Name</h6>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .featured-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 0.75rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .featured-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.1) !important;
+    }
+    .featured-badge {
+        position: absolute;
+        top: 15px;
+        left: -30px;
+        background-color: #2196f3;
+        color: #fff;
+        padding: 5px 30px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        transform: rotate(-45deg);
+        z-index: 10;
+        text-align: center;
+        width: 120px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        white-space: nowrap;
+    }
+
+    .featured-swiper {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        border-radius: 0.75rem;
+    }
+
+    .featured-auctions-wrapper .swiper-button-next,
+    .featured-auctions-wrapper .swiper-button-prev {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 44px;
+        height: 44px;
+        background-color: var(--bs-body-bg);
+        border-radius: 50%;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        color: var(--bs-body-color);
+        transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .featured-auctions-wrapper .swiper-button-next:hover,
+    .featured-auctions-wrapper .swiper-button-prev:hover {
+        background-color: #2196f3;
+        color: #fff;
+    }
+
+    .featured-auctions-wrapper .swiper-button-next {
+        right: -22px;
+    }
+
+    .featured-auctions-wrapper .swiper-button-prev {
+        left: -22px;
+    }
+
+    [data-bs-theme="dark"] .featured-auctions-wrapper .swiper-button-next,
+    [data-bs-theme="dark"] .featured-auctions-wrapper .swiper-button-prev {
+        background-color: #343a40;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        color: #fff;
+    }
+
+    [data-bs-theme="dark"] .featured-auctions-wrapper .swiper-button-next:hover,
+    [data-bs-theme="dark"] .featured-auctions-wrapper .swiper-button-prev:hover {
+        background-color: #2196f3;
+        color: #fff;
+    }
+
+    .featured-auctions-wrapper .swiper-button-next::after,
+    .featured-auctions-wrapper .swiper-button-prev::after {
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (document.querySelector('.featured-swiper')) {
+                var swiper = new Swiper('.featured-swiper', {
+                    loop: true,
+                    slidesPerView: 1,
+                    spaceBetween: 30,
+                    speed: 800,
+                    autoplay: {
+                        delay: 10000,
+                        disableOnInteraction: false,
+                    },
+                    navigation: {
+                        nextEl: '.swiper-button-next',
+                        prevEl: '.swiper-button-prev',
+                    },
+                    breakpoints: {
+                        768: {
+                            slidesPerView: 2,
+                            spaceBetween: 40
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+} 

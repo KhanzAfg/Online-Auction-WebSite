@@ -1,0 +1,56 @@
+@model OnlineAuction.ViewModels.RateUserViewModel
+
+@{
+    ViewData["Title"] = $"Rate {(Model.IsRatingBuyer ? "Buyer" : "Seller")}";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">@ViewData["Title"]</h2>
+                    <h5 class="mb-3">Auction: @Model.AuctionTitle</h5>
+                    <p class="mb-4">Rate @Model.UserToRateName for their @(Model.IsRatingBuyer ? "purchase" : "sale") of this item.</p>
+
+                    <form asp-action="RateUser" method="post">
+                        <input type="hidden" asp-for="AuctionId" />
+                        <input type="hidden" asp-for="UserToRateId" />
+                        <input type="hidden" asp-for="IsRatingBuyer" />
+
+                        <div class="mb-4">
+                            <label asp-for="Score" class="form-label">Rating</label>
+                            <div class="rating-input">
+                                @for (int i = -5; i <= 5; i++)
+                                {
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" asp-for="Score" value="@i" id="score-@i" />
+                                        <label class="form-check-label @(i < 0 ? "text-danger" : i > 0 ? "text-success" : "text-muted")" for="score-@i">
+                                            @(i < 0 ? i.ToString() : i > 0 ? "+" + i.ToString() : "0")
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                            <span asp-validation-for="Score" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="Comment" class="form-label"></label>
+                            <textarea asp-for="Comment" class="form-control" rows="3" placeholder="Share your experience (optional)"></textarea>
+                            <span asp-validation-for="Comment" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">Submit Rating</button>
+                            <a asp-action="AuctionDetails" asp-route-id="@Model.AuctionId" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+} 

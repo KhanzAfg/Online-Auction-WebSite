@@ -1,0 +1,132 @@
+@model OnlineAuction.Models.ApplicationUser
+
+@{
+    ViewData["Title"] = $"{Model.UserName}'s Profile";
+}
+
+<div class="container mt-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="Index">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Seller Profile</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-user-circle fa-5x text-primary"></i>
+                    </div>
+                    <h4 class="card-title">@Model.UserName</h4>
+                    <p class="text-muted">Member since @Model.CreatedAt.ToString("MMMM yyyy")</p>
+                    
+                    <div class="seller-rating mb-3">
+                        @for (int i = 0; i < 5; i++)
+                        {
+                            <i class="fas fa-star @(i < Model.Rating ? "text-warning" : "text-muted")"></i>
+                        }
+                        <span class="ms-2">(@Model.Rating.ToString("F1"))</span>
+                    </div>
+
+                    <div class="seller-stats">
+                        <div class="row text-center">
+                            <div class="col">
+                                <h5>@Model.Auctions.Count</h5>
+                                <small class="text-muted">Auctions</small>
+                            </div>
+                            <div class="col">
+                                <h5>@Model.Bids.Count</h5>
+                                <small class="text-muted">Bids</small>
+                            </div>
+                            <div class="col">
+                                <h5>@Model.TotalRatings</h5>
+                                <small class="text-muted">Total Ratings</small>
+                            </div>
+                            <div class="col">
+                                <h5 class="text-success">+@Model.PositiveRatings</h5>
+                                <small class="text-muted">Positive</small>
+                            </div>
+                            <div class="col">
+                                <h5 class="text-danger">@Model.NegativeRatings</h5>
+                                <small class="text-muted">Negative</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Active Auctions</h5>
+                    @{
+                        var activeAuctions = Model.Auctions.Where(a => a.Status == AuctionStatus.Active).ToList();
+                    }
+                    @if (activeAuctions.Any())
+                    {
+                        <div class="list-group">
+                            @foreach (var auction in activeAuctions)
+                            {
+                                <a href="@Url.Action("AuctionDetails", "Home", new { id = auction.Id })" 
+                                   class="list-group-item list-group-item-action">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">@auction.Title</h6>
+                                            <small class="text-muted">
+                                                Current Bid: $@(auction.CurrentBid?.Amount.ToString("F2") ?? auction.StartingPrice.ToString("F2"))
+                                            </small>
+                                        </div>
+                                        <small class="text-muted">
+                                            Ends: @auction.EndDate.ToString("MMM dd, yyyy")
+                                        </small>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No active auctions at the moment.</p>
+                    }
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Completed Auctions</h5>
+                    @{
+                        var completedAuctions = Model.Auctions.Where(a => a.Status != AuctionStatus.Active).ToList();
+                    }
+                    @if (completedAuctions.Any())
+                    {
+                        <div class="list-group">
+                            @foreach (var auction in completedAuctions)
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">@auction.Title</h6>
+                                            <small class="text-muted">
+                                                Final Price: $@(auction.CurrentBid?.Amount.ToString("F2") ?? auction.StartingPrice.ToString("F2"))
+                                            </small>
+                                        </div>
+                                        <small class="text-muted">
+                                            Ended: @auction.EndDate.ToString("MMM dd, yyyy")
+                                        </small>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No completed auctions yet.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

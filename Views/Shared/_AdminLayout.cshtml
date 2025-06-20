@@ -1,0 +1,56 @@
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Admin Panel</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm py-2 align-items-center" style="font-family: 'Poppins', Arial, sans-serif;">
+            <div class="container align-items-center">
+                <a class="navbar-brand d-flex align-items-center" asp-area="" asp-controller="Home" asp-action="Index" style="padding: 0; font-family: 'Poppins', Arial, sans-serif; font-weight: 700; font-size: 2rem; letter-spacing: 1px;">
+                    <span style="color: #2196f3;">Auction</span><span style="color: #198754;">Bay</span>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse align-items-center" id="mainNavbar">
+                    <ul class="navbar-nav me-auto align-items-center" style="font-weight: 500;">
+                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">Home</a></li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="categoryDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Categories</a>
+                            <ul class="dropdown-menu" aria-labelledby="categoryDropdown" id="categoryList">
+                                <li><a class="dropdown-item" asp-controller="Home" asp-action="Categories">All Categories</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="SellAuction">Sell an Item</a></li>
+                    </ul>
+                    <ul class="navbar-nav ms-2 align-items-center" style="height: 40px;">
+                        <li class="nav-item">
+                            <a class="nav-link theme-toggle" id="themeToggle" title="Toggle theme">
+                                <i class="fas fa-moon"></i>
+                            </a>
+                        </li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Notifications" asp-action="Index"><i class="fas fa-bell"></i> <span id="notificationCount" class="badge bg-danger ms-1 d-none"></span></a></li>
+                        <partial name="_LoginPartial" />
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        @RenderBody()
+    </div>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html> 

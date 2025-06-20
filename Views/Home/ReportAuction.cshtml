@@ -1,0 +1,52 @@
+@model OnlineAuction.Models.Auction
+
+@{
+    ViewData["Title"] = "Report Auction";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Report Auction</h3>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h4>Auction Details</h4>
+                        <div class="row">
+                            <div class="col-md-4">
+                                @if (Model.Images.Any())
+                                {
+                                    <img src="@Model.Images.First().ImagePath" class="img-fluid rounded" alt="@Model.Title" />
+                                }
+                            </div>
+                            <div class="col-md-8">
+                                <h5>@Model.Title</h5>
+                                <p class="text-muted">Seller: @Model.Seller.FullName</p>
+                                <p>@Model.Description</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form asp-action="ReportAuction" method="post">
+                        <input type="hidden" name="auctionId" value="@Model.Id" />
+                        <div class="mb-3">
+                            <label for="reason" class="form-label">Reason for Report</label>
+                            <textarea name="reason" class="form-control" rows="4" required 
+                                    placeholder="Please provide a detailed explanation of why you are reporting this auction..."></textarea>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            Your report will be reviewed by our moderation team. Please provide as much detail as possible to help us understand the issue.
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="AuctionDetails" asp-route-id="@Model.Id" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-danger">Submit Report</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

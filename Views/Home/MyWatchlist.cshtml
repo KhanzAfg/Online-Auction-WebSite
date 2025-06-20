@@ -1,0 +1,139 @@
+@using OnlineAuction.Models
+@model IEnumerable<Watchlist>
+
+@{
+    ViewData["Title"] = "My Watchlist";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>My Watchlist</h2>
+        <a asp-action="Index" class="btn btn-primary">Browse Auctions</a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (Model.Any())
+    {
+        <div class="row">
+            @foreach (var item in Model)
+            {
+                var auction = item.Auction;
+                if (auction == null) continue;
+
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        @if (auction.Images.Any())
+                        {
+                            <img src="@auction.Images.First().ImagePath" class="card-img-top" alt="@auction.Title" style="height: 200px; object-fit: cover;">
+                        }
+                        else
+                        {
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <i class="fas fa-image fa-3x text-muted"></i>
+                            </div>
+                        }
+                        
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title product-title">@auction.Title</h5>
+                            <style>
+                                .product-title {
+                                    color: var(--bs-body-color);
+                                    font-weight: 700;
+                                }
+                            </style>
+                            <p class="card-text text-muted">@auction.Category?.Name</p>
+                            
+                            <!-- Seller Information -->
+                            <div class="d-flex align-items-center mb-3">
+                                @if (!string.IsNullOrEmpty(auction.Seller?.ProfileImagePath))
+                                {
+                                    <img src="@auction.Seller.ProfileImagePath" alt="@auction.Seller.FullName" 
+                                         class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover;">
+                                }
+                                else
+                                {
+                                    <i class="fas fa-user-circle me-2 text-muted" style="font-size: 30px;"></i>
+                                }
+                                <small class="text-muted">by @auction.Seller?.FullName</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <strong class="text-primary">Current Bid: $@(auction.CurrentBid?.Amount ?? auction.StartingPrice)</strong>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <small class="text-muted">
+                                    <i class="fas fa-clock"></i> Ends: @auction.EndDate.ToString("MMM dd, yyyy HH:mm")
+                                </small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <small class="text-muted">
+                                    <i class="fas fa-gavel"></i> @auction.Bids.Count bids
+                                </small>
+                            </div>
+                            
+                            <div class="mt-auto">
+                                <div class="d-grid gap-2">
+                                    <a asp-action="AuctionDetails" asp-route-id="@auction.Id" class="btn btn-primary">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </a>
+                                    <form asp-action="RemoveFromWatchlist" method="post" class="d-inline">
+                                        <input type="hidden" name="auctionId" value="@auction.Id" />
+                                        <button type="submit" class="btn btn-outline-danger w-100" 
+                                                onclick="return confirm('Remove this auction from your watchlist?')">
+                                            <i class="fas fa-heart-broken"></i> Remove
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card-footer">
+                            <small class="text-muted">
+                                Added: @item.AddedAt.ToString("MMM dd, yyyy")
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="fas fa-heart fa-4x text-muted mb-4"></i>
+            <h4 class="text-muted">Your watchlist is empty</h4>
+            <p class="text-muted">Start browsing auctions and add items you're interested in to your watchlist.</p>
+            <a asp-action="Index" class="btn btn-primary">Browse Auctions</a>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Auto-hide alerts after 5 seconds
+        setTimeout(function() {
+            var alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                var bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+    </script>
+} 

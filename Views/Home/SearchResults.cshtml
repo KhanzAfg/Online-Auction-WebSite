@@ -1,0 +1,106 @@
+@model IEnumerable<OnlineAuction.Models.Auction>
+
+@{
+    ViewData["Title"] = "Search Results";
+}
+
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>Search Results for "@ViewData["CurrentFilter"]"</h2>
+            <p class="text-muted">Found @Model.Count() results</p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col">
+            <form asp-action="Search" method="get" class="d-flex">
+                <input type="text" name="searchTerm" class="form-control me-2" placeholder="Search auctions..." value="@ViewData["CurrentFilter"]" />
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            No auctions found matching your search criteria. Try different keywords or <a asp-action="Index" class="alert-link">browse all auctions</a>.
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            @foreach (var auction in Model)
+            {
+                <div class="col">
+                    <div class="card h-100">
+                        @if (auction.Images != null && auction.Images.Any())
+                        {
+                            <div id="carousel-@auction.Id" class="carousel slide" data-bs-ride="carousel">
+                                <div class="carousel-inner">
+                                    @foreach (var image in auction.Images)
+                                    {
+                                        <div class="carousel-item @(image == auction.Images.First() ? "active" : "")">
+                                            <img src="@image.ImagePath" class="card-img-top" alt="@auction.Title" style="height: 200px; object-fit: cover;">
+                                        </div>
+                                    }
+                                </div>
+                                @if (auction.Images.Count > 1)
+                                {
+                                    <button class="carousel-control-prev" type="button" data-bs-target="#carousel-@auction.Id" data-bs-slide="prev">
+                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Previous</span>
+                                    </button>
+                                    <button class="carousel-control-next" type="button" data-bs-target="#carousel-@auction.Id" data-bs-slide="next">
+                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Next</span>
+                                    </button>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <img src="/images/no-image.jpg" class="card-img-top" alt="No Image Available" style="height: 200px; object-fit: cover;">
+                        }
+                        <div class="card-body">
+                            <h5 class="card-title product-title">@auction.Title</h5>
+                            <style>
+                                .product-title {
+                                    color: var(--bs-body-color);
+                                    font-weight: 700;
+                                }
+                            </style>
+                            <p class="card-text text-muted">
+                                <small>Category: @auction.Category?.Name</small>
+                            </p>
+                            <p class="card-text">@(auction.Description?.Length > 100 ? auction.Description.Substring(0, 100) + "..." : auction.Description)</p>
+                            
+                            <!-- Seller Information -->
+                            <div class="d-flex align-items-center mb-3">
+                                @if (!string.IsNullOrEmpty(auction.Seller?.ProfileImagePath))
+                                {
+                                    <img src="@auction.Seller.ProfileImagePath" alt="@auction.Seller.FullName" 
+                                         class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover;">
+                                }
+                                else
+                                {
+                                    <i class="fas fa-user-circle me-2 text-muted" style="font-size: 30px;"></i>
+                                }
+                                <small class="text-muted">by @auction.Seller?.FullName</small>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong class="text-primary">$@auction.MinimumBidPrice.ToString("F2")</strong>
+                                    <br />
+                                    <small class="text-muted">Ends: @auction.EndDate.ToString("MMM dd, yyyy HH:mm")</small>
+                                </div>
+                                <a asp-action="AuctionDetails" asp-route-id="@auction.Id" class="btn btn-primary">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div> 
