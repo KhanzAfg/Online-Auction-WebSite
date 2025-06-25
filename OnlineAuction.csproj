@@ -24,6 +24,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Twitter" Version="8.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.WsFederation" Version="8.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>
