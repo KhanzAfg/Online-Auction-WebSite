@@ -71,24 +71,15 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     try
     {
-        var context = services.GetRequiredService<ApplicationDbContext>();
-        var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-        
-        // Apply pending migrations
-        await context.Database.MigrateAsync();
-        
-        // Seed initial data
-        await DbInitializer.InitializeAsync(userManager, roleManager, context);
+        await DbInitializer.InitializeAsync(services);
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "Database initialization failed");
-        
-        // Only throw in production to prevent startup
+
         if (!app.Environment.IsDevelopment())
-            throw; 
+            throw;
     }
 }
 
@@ -96,11 +87,10 @@ using (var scope = app.Services.CreateScope())
 // 3. MIDDLEWARE PIPELINE
 // =============================================
 
-// Environment-specific handling
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
-    app.UseMigrationsEndPoint();
+    // app.UseMigrationsEndPoint(); // ❌ Removed: not available in .NET 8
 }
 else
 {
