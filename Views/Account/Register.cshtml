@@ -19,10 +19,13 @@
         cursor: pointer;
         color: #6c757d;
         font-size: 16px;
+        padding: 5px;
+        border-radius: 3px;
     }
     
     .password-toggle:hover {
         color: #495057;
+        background-color: #f8f9fa;
     }
     
     .password-field {
@@ -53,7 +56,7 @@
                 <div class="password-container">
                     <input asp-for="Password" class="form-control password-field" type="password" />
                     <button type="button" class="password-toggle" onclick="togglePassword('Password')">
-                        <i class="fas fa-eye" id="Password-icon"></i>
+                        <span id="Password-icon">👁️</span>
                     </button>
                 </div>
                 <span asp-validation-for="Password" class="text-danger"></span>
@@ -64,7 +67,7 @@
                 <div class="password-container">
                     <input asp-for="ConfirmPassword" class="form-control password-field" type="password" />
                     <button type="button" class="password-toggle" onclick="togglePassword('ConfirmPassword')">
-                        <i class="fas fa-eye" id="ConfirmPassword-icon"></i>
+                        <span id="ConfirmPassword-icon">👁️</span>
                     </button>
                 </div>
                 <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
@@ -91,13 +94,14 @@
             
             if (passwordField.type === 'password') {
                 passwordField.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
+                icon.textContent = '🙈';
             } else {
                 passwordField.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
+                icon.textContent = '👁️';
             }
         }
+        
+        // Debug: Check if script is loaded
+        console.log('Password toggle script loaded');
     </script>
 } 

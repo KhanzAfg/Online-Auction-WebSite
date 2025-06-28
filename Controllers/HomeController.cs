@@ -1264,5 +1264,25 @@ namespace OnlineAuction.Controllers
 
             return View(viewModel);
         }
+
+        // Add this test action to check database seeding
+        public async Task<IActionResult> TestSeeding()
+        {
+            var users = await _context.Users.ToListAsync();
+            var auctions = await _context.Auctions.ToListAsync();
+            var categories = await _context.Categories.ToListAsync();
+            
+            var result = new
+            {
+                TotalUsers = users.Count,
+                TotalAuctions = auctions.Count,
+                TotalCategories = categories.Count,
+                DemoUsers = users.Where(u => u.Email.StartsWith("demo_user")).Count(),
+                Users = users.Select(u => new { u.Email, u.FullName, u.CreatedAt }).ToList(),
+                Auctions = auctions.Select(a => new { a.Title, a.SellerId, a.CreatedAt }).ToList()
+            };
+            
+            return Json(result);
+        }
     }
 } 
