@@ -1,6 +1,7 @@
 @model dynamic
 @using OnlineAuction.Models
 @using OnlineAuction.ViewModels
+@using OnlineAuction.Helpers
 
 @{
     var auctions = (IEnumerable<Auction>)Model.Auctions;
@@ -205,11 +206,24 @@
                 {
                     <nav aria-label="Search results pagination">
                         <ul class="pagination justify-content-center">
-                            @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                            @{
+                                var paginationItems = PaginationHelper.GeneratePagination(ViewBag.CurrentPage, ViewBag.TotalPages);
+                            }
+                            
+                            @foreach (var item in paginationItems)
                             {
-                                <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
-                                    <a class="page-link" href="#" onclick="goToPage(@i)">@i</a>
-                                </li>
+                                if (item.IsEllipsis)
+                                {
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                }
+                                else
+                                {
+                                    <li class="page-item @(item.IsActive ? "active" : "")">
+                                        <a class="page-link" href="#" onclick="goToPage(@item.PageNumber)">@item.PageNumber</a>
+                                    </li>
+                                }
                             }
                         </ul>
                     </nav>

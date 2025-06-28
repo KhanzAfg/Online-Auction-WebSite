@@ -1,4 +1,5 @@
 @model OnlineAuction.ViewModels.CategoryViewModel
+@using OnlineAuction.Helpers
 
 @{
     ViewData["Title"] = Model.Category.Name;
@@ -34,11 +35,24 @@
     {
         <nav aria-label="Auction pagination" class="mt-4">
             <ul class="pagination justify-content-center">
-                @for (int i = 1; i <= Model.TotalPages; i++)
+                @{
+                    var paginationItems = PaginationHelper.GeneratePagination(Model.CurrentPage, Model.TotalPages);
+                }
+                
+                @foreach (var item in paginationItems)
                 {
-                    <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
-                        <a class="page-link" href="@Url.Action("Category", new { id = Model.Category.Id, page = i })">@i</a>
-                    </li>
+                    if (item.IsEllipsis)
+                    {
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="page-item @(item.IsActive ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("Category", new { id = Model.Category.Id, page = item.PageNumber })">@item.PageNumber</a>
+                        </li>
+                    }
                 }
             </ul>
         </nav>
