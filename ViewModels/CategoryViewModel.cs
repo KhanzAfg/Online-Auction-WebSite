@@ -8,8 +8,8 @@ namespace OnlineAuction.ViewModels
     public class CategoryViewModel
     {
         // Properties for displaying a category page
-        public Category Category { get; set; }
-        public List<Auction> Auctions { get; set; }
+        public Category Category { get; set; } = null!;
+        public List<Auction> Auctions { get; set; } = new();
         public int CurrentPage { get; set; }
         public int TotalPages { get; set; }
 

@@ -287,7 +287,7 @@ namespace OnlineAuction.Data
         }
 
         // Add this method to seed 10 demo users, each with 10 auctions
-        private static async Task SeedDemoUsersAndAuctionsAsync(IServiceProvider serviceProvider)
+        public static async Task SeedDemoUsersAndAuctionsAsync(IServiceProvider serviceProvider)
         {
             using var scope = serviceProvider.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
