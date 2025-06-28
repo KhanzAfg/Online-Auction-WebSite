@@ -183,6 +183,9 @@ namespace OnlineAuction.Data
                     }
                  }
             }
+
+            // Seed 10 demo users with 10 auctions each
+            await SeedDemoUsersAndAuctionsAsync(serviceProvider);
         }
 
         private static async Task SeedRandomAuctionsAsync(ApplicationDbContext context, string sellerId, string webRootPath)
@@ -281,6 +284,129 @@ namespace OnlineAuction.Data
             }
 
             await context.SaveChangesAsync();
+        }
+
+        // Add this method to seed 10 demo users, each with 10 auctions
+        private static async Task SeedDemoUsersAndAuctionsAsync(IServiceProvider serviceProvider)
+        {
+            using var scope = serviceProvider.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var webHostEnvironment = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
+
+            var demoUserPrefix = "demo_user";
+            var demoEmailDomain = "@example.com";
+            var demoPassword = "User123!";
+
+            // Only seed if not already present
+            var existingDemoUsers = context.Users.Where(u => u.Email.StartsWith(demoUserPrefix)).ToList();
+            if (existingDemoUsers.Count >= 10) return;
+
+            var categories = context.Categories.ToList();
+            var random = new Random();
+
+            for (int i = 1; i <= 10; i++)
+            {
+                var email = $"{demoUserPrefix}{i}{demoEmailDomain}";
+                var user = await userManager.FindByEmailAsync(email);
+                if (user == null)
+                {
+                    user = new ApplicationUser
+                    {
+                        UserName = email,
+                        Email = email,
+                        EmailConfirmed = true,
+                        FullName = $"Demo User {i}",
+                        Rating = 5.0m
+                    };
+                    var result = await userManager.CreateAsync(user, demoPassword);
+                    if (result.Succeeded)
+                    {
+                        await userManager.AddToRoleAsync(user, "User");
+                    }
+                }
+
+                // For each user, create 10 auctions
+                for (int j = 1; j <= 10; j++)
+                {
+                    // Pick a random category
+                    var category = categories[random.Next(categories.Count)];
+                    // Use the auctionData logic from SeedRandomAuctionsAsync
+                    var auctionData = new Dictionary<string, (string Title, string Description, decimal MinPrice, string ImagePath)[]>
+                    {
+                        ["Electronics"] = new[]
+                        {
+                            ("iPhone 13 Pro", "256GB, Space Gray, includes original accessories", 800m, "/sample-images/electronics_1.jpg"),
+                            ("Samsung 4K Smart TV", "55-inch, HDR, built-in streaming apps", 600m, "/sample-images/electronics_2.jpg"),
+                            ("MacBook Pro M1", "16GB RAM, 512GB SSD, perfect condition", 1200m, "/sample-images/electronics_3.jpg")
+                        },
+                        ["Fashion"] = new[]
+                        {
+                            ("Designer Handbag", "Louis Vuitton Neverfull, authentic", 1200m, "/sample-images/fashion_1.jpg"),
+                            ("Rolex Watch", "Datejust 41, stainless steel", 8000m, "/sample-images/fashion_2.jpg"),
+                            ("Designer Suit", "Tom Ford, wool blend, size 42", 1500m, "/sample-images/fashion_3.jpg")
+                        },
+                        ["Home & Garden"] = new[]
+                        {
+                            ("Modern Sofa Set", "3-piece sectional, gray fabric", 1200m, "/sample-images/home & garden_1.jpg"),
+                            ("Kitchen Appliances", "Complete set of high-end appliances", 2000m, "/sample-images/home & garden_2.jpg"),
+                            ("Garden Furniture", "Wicker set with cushions, 6 pieces", 800m, "/sample-images/home & garden_3.jpg")
+                        },
+                        ["Sports"] = new[]
+                        {
+                            ("Mountain Bike", "Trek, full suspension, 29-inch wheels", 1500m, "/sample-images/sports_1.jpg"),
+                            ("Golf Clubs Set", "Callaway, complete set with bag", 800m, "/sample-images/sports_2.jpg"),
+                            ("Tennis Racket", "Wilson Pro Staff, like new", 200m, "/sample-images/sports_3.jpg")
+                        },
+                        ["Books"] = new[]
+                        {
+                            ("First Edition Collection", "Classic novels, excellent condition", 2000m, "/sample-images/books_1.jpg"),
+                            ("Signed Books", "Collection of signed first editions", 1500m, "/sample-images/books_2.jpg"),
+                            ("Rare Manuscripts", "Historical documents, authenticated", 3000m, "/sample-images/books_3.jpg")
+                        },
+                        ["Art"] = new[]
+                        {
+                            ("Original Painting", "Contemporary abstract, large canvas", 3000m, "/sample-images/art_1.jpg"),
+                            ("Limited Edition Print", "Numbered, signed by artist", 800m, "/sample-images/art_2.jpg"),
+                            ("Sculpture", "Bronze, modern design", 2000m, "/sample-images/art_3.jpg")
+                        },
+                        ["Jewelry"] = new[]
+                        {
+                            ("Diamond Ring", "2 carat, VS1 clarity, G color", 5000m, "/sample-images/jewelry_1.jpg"),
+                            ("Pearl Necklace", "South Sea pearls, 18K gold clasp", 2000m, "/sample-images/jewelry_2.jpg"),
+                            ("Vintage Brooch", "Art Deco style, sapphire and diamond", 1500m, "/sample-images/jewelry_3.jpg")
+                        },
+                        ["Toys & Games"] = new[]
+                        {
+                            ("Vintage Board Games", "Complete collection, excellent condition", 500m, "/sample-images/toysgames_1.jpg"),
+                            ("Collectible Action Figures", "Rare set, mint in box", 800m, "/sample-images/toysgames_2.jpg"),
+                            ("LEGO Star Wars Set", "Complete Millennium Falcon, sealed", 300m, "/sample-images/toysgames_3.jpg")
+                        }
+                    };
+                    var items = auctionData[category.Name];
+                    var item = items[random.Next(items.Length)];
+
+                    var auction = new Auction
+                    {
+                        Title = item.Title,
+                        Description = item.Description,
+                        MinimumBidPrice = item.MinPrice,
+                        StartDate = DateTime.UtcNow.AddDays(-random.Next(1, 5)),
+                        EndDate = DateTime.UtcNow.AddDays(random.Next(5, 15)),
+                        Status = AuctionStatus.Active,
+                        CategoryId = category.Id,
+                        SellerId = user.Id,
+                        Images = new List<AuctionImage>()
+                    };
+                    auction.Images.Add(new AuctionImage
+                    {
+                        ImagePath = item.ImagePath,
+                        IsMainImage = true
+                    });
+                    context.Auctions.Add(auction);
+                }
+                await context.SaveChangesAsync();
+            }
         }
     }
 } 

@@ -479,5 +479,15 @@ namespace OnlineAuction.Controllers
             }
             return RedirectToAction(nameof(Users));
         }
+
+        // Add this endpoint to allow reseeding demo users and auctions
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ReseedDemoData()
+        {
+            await DbInitializer.SeedDemoUsersAndAuctionsAsync(HttpContext.RequestServices);
+            TempData["Success"] = "Demo users and auctions reseeded successfully.";
+            return RedirectToAction("Index");
+        }
     }
 } 
